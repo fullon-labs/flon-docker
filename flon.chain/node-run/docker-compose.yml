@@ -2,18 +2,25 @@ version: "3.9"
 
 services:
   node:
-    image: fullon/fonod:${NODE_IMG_VER}
-    container_name: flon_${NET}_${container_id}
-    working_dir: ${NODE_HOME}/flon_${NET}_${container_id}
-    entrypoint: ["./bin/start.sh", "$NODE_HOME/flon_${NET}_${container_id}", ""]
+    image: ${NODE_IMG_HEADER}floncore/funod:${FULLON_VERSION}
+    container_name: ${node_name}
+    working_dir: ${NODE_WORK_PATH}
+    entrypoint: ["./bin/start.sh", "${NODE_WORK_PATH}", ""]
     restart: always
     privileged: true
+    ulimits:
+      core:
+        soft: -1
+        hard: -1                         # 解除 core 文件大小限制
     ports: 
       - "${RPC_PORT}:8888"
       - "${P2P_PORT}:9876"
       - "${HIST_WS_PORT}:9555"
+    environment:
+      - COREFILE_PATH=/cores            # 自定义变量，程序可选用
     volumes:
-      - ${NODE_HOME}/flon_${NET}_${container_id}/:${NODE_HOME}/flon_${NET}_${container_id}/
+      - ./cores:/cores                  # 映射宿主机目录
+      - ${NODE_WORK_PATH}:${NODE_WORK_PATH}
     dns:
       - 114.114.114.114
       - 8.8.8.8

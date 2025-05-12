@@ -1,0 +1,4 @@
+./run.init.chain.sh http://hk-t1.vmi.vestar.vip:28888
+
+# 拷贝contracts 合约
+cp -r /opt/data/flon_devnet_02/contracts/flon.contracts/build/install/contracts ./

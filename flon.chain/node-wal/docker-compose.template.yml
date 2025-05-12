@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+  ${CONTAINER_NAME}:
+    image: ${NODE_IMG_HEADER}floncore/funod:${FULLON_VERSION}
+    container_name: ${CONTAINER_NAME}
+    working_dir: /opt/flon
+    entrypoint: ["./bin/run-wallet.sh", "."]
+    volumes:
+      - ${host}/:/opt/flon
+      - ${host}/bin/.bashrc:/root/.bashrc
+      - ${host}/bin-script:/root/bin
+      - /opt/contracts:/opt/contracts
+    env_file:
+      - .env 
+    dns:
+      - 114.114.114.114
+      - 8.8.8.8
+networks:
+  default:
+    name: flon
+    external: true

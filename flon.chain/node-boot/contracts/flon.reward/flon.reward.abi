@@ -1,0 +1,283 @@
+{
+    "____comment": "This file was generated with eosio-abigen. DO NOT EDIT ",
+    "version": "flon::abi/1.2",
+    "types": [
+        {
+            "new_type_name": "voted_producer_map",
+            "type": "pair_name_voted_producer_info[]"
+        }
+    ],
+    "structs": [
+        {
+            "name": "addvote",
+            "base": "",
+            "fields": [
+                {
+                    "name": "voter",
+                    "type": "name"
+                },
+                {
+                    "name": "votes",
+                    "type": "int64"
+                }
+            ]
+        },
+        {
+            "name": "claimfor",
+            "base": "",
+            "fields": [
+                {
+                    "name": "clamer",
+                    "type": "name"
+                },
+                {
+                    "name": "voter",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "claimrewards",
+            "base": "",
+            "fields": [
+                {
+                    "name": "voter",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "global_state",
+            "base": "",
+            "fields": [
+                {
+                    "name": "total_rewards",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
+            "name": "init",
+            "base": "",
+            "fields": [
+                {
+                    "name": "core_symbol",
+                    "type": "symbol"
+                }
+            ]
+        },
+        {
+            "name": "pair_name_voted_producer_info",
+            "base": "",
+            "fields": [
+                {
+                    "name": "first",
+                    "type": "name"
+                },
+                {
+                    "name": "second",
+                    "type": "voted_producer_info"
+                }
+            ]
+        },
+        {
+            "name": "producer",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "is_registered",
+                    "type": "bool"
+                },
+                {
+                    "name": "total_rewards",
+                    "type": "asset"
+                },
+                {
+                    "name": "allocating_rewards",
+                    "type": "asset"
+                },
+                {
+                    "name": "allocated_rewards",
+                    "type": "asset"
+                },
+                {
+                    "name": "votes",
+                    "type": "int64"
+                },
+                {
+                    "name": "rewards_per_vote",
+                    "type": "int128"
+                },
+                {
+                    "name": "update_at",
+                    "type": "block_timestamp_type"
+                }
+            ]
+        },
+        {
+            "name": "regproducer",
+            "base": "",
+            "fields": [
+                {
+                    "name": "producer",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "subvote",
+            "base": "",
+            "fields": [
+                {
+                    "name": "voter",
+                    "type": "name"
+                },
+                {
+                    "name": "votes",
+                    "type": "int64"
+                }
+            ]
+        },
+        {
+            "name": "version",
+            "base": "",
+            "fields": []
+        },
+        {
+            "name": "voted_producer_info",
+            "base": "",
+            "fields": [
+                {
+                    "name": "last_rewards_per_vote",
+                    "type": "int128"
+                }
+            ]
+        },
+        {
+            "name": "voteproducer",
+            "base": "",
+            "fields": [
+                {
+                    "name": "voter",
+                    "type": "name"
+                },
+                {
+                    "name": "producers",
+                    "type": "name[]"
+                }
+            ]
+        },
+        {
+            "name": "voter",
+            "base": "",
+            "fields": [
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "votes",
+                    "type": "int64"
+                },
+                {
+                    "name": "producers",
+                    "type": "voted_producer_map"
+                },
+                {
+                    "name": "unclaimed_rewards",
+                    "type": "asset"
+                },
+                {
+                    "name": "claimed_rewards",
+                    "type": "asset"
+                },
+                {
+                    "name": "update_at",
+                    "type": "block_timestamp_type"
+                }
+            ]
+        }
+    ],
+    "actions": [
+        {
+            "name": "addvote",
+            "type": "addvote",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "claimfor",
+            "type": "claimfor",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "claimrewards",
+            "type": "claimrewards",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "init",
+            "type": "init",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "regproducer",
+            "type": "regproducer",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "subvote",
+            "type": "subvote",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "version",
+            "type": "version",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "voteproducer",
+            "type": "voteproducer",
+            "ricardian_contract": ""
+        }
+    ],
+    "tables": [
+        {
+            "name": "global",
+            "type": "global_state",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "producers",
+            "type": "producer",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "voters",
+            "type": "voter",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        }
+    ],
+    "ricardian_clauses": [
+        {
+            "id": "ContractVersion",
+            "body": ""
+        }
+    ],
+    "variants": [],
+    "action_results": [
+        {
+            "name": "version",
+            "result_type": "string"
+        }
+    ]
+}

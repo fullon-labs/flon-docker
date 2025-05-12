@@ -1,0 +1,13 @@
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=password
+POSTGRES_PORT=5432
+PG_HOST=127.0.0.1
+SCAN_CONTAINER_NAME_HEADER=flonscan_only
+
+# Nodeos 配置
+NODE_PORT=9555
+
+HISTORY_TOOLS_IMAGE=floncore/history-tools
+
+# 需要填充的表
+FILL_TABLES=contract_index64,contract_index128,contract_index256,account_metadata,code,contract_index_double,contract_index_long_double,contract_table,generated_transaction,global_property,permission,permission_link,protocol_state,resource_limits,resource_limits_config,resource_limits_state,resource_usage

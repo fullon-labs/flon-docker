@@ -1,0 +1,16 @@
+# PostgreSQL
+PG_USER=postgres
+PG_PASS=********
+PG_HOST=xxx.xxx.xxx.xxx
+PG_PORT=15432
+PG_DB=postgres
+TABLE_NAME=chain.fill_status
+
+# Redis
+REDIS_HOST=127.0.0.1
+REDIS_PORT=16379
+REDIS_PASS=******
+
+# Telegram
+CHAT_ID=-1001703682899
+TG_BOT=https://api.telegram.org/botXXXXXXXXX:YOURTOKEN/sendMessage

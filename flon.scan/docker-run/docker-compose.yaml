@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  postgres:
+    container_name: ${POSTGRES_CONTAINER_NAME}
+    image: postgres:15.2
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB:-postgres}  # 默认数据库
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - ${PG_DATA}:/var/lib/postgresql/data/pgdata
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  scan-svc:
+    container_name: ${SCAN_CONTAINER_NAME}
+    image: ${HISTORY_TOOLS_IMAGE}
+    command: >
+      /bin/sh -c "
+        echo 'Waiting for nodeos service...';
+        while ! nc -z ${NODE_HOST} ${NODE_PORT}; do
+          sleep 1;
+        done;
+        
+        echo 'Waiting for PostgreSQL...';
+        until psql -U $POSTGRES_USER -h $PG_HOST -d $POSTGRES_DB -c 'SELECT 1' >/dev/null 2>&1; do
+          sleep 1;
+        done;
+        
+        echo 'Checking if fill_status table exists...';
+        if psql -U $POSTGRES_USER -h $PG_HOST -d $POSTGRES_DB -tAc \"SELECT 1 FROM information_schema.tables WHERE table_schema='chain' AND table_name='fill_status'\" | grep -q 1; then
+          echo 'Table exists, skipping create table...';
+          fill-pg --fill-connect-to=${NODE_HOST}:${NODE_PORT} --fill-table ${FILL_TABLES};
+        else
+          echo 'Table does not exist, will create tables...';
+          fill-pg --fill-connect-to=${NODE_HOST}:${NODE_PORT} --fpg-create --fill-table ${FILL_TABLES};
+        fi;
+        tail -f /dev/null
+      "
+    environment:
+      - PGUSER=${POSTGRES_USER}
+      - PGPASSWORD=${POSTGRES_PASSWORD}
+      - PGHOST=${PG_HOST}
+      - PGDATABASE=${POSTGRES_DB:-postgres}
+    restart: on-failure
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+networks:
+  default:
+    name: flon
+    external: true

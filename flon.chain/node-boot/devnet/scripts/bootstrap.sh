@@ -5,11 +5,8 @@ flonActivePubKey=AM5SMw8Lum7MG9V61LQz8enJyM9MB7WBpvoiXsp5YmAJXZmE92j2
 sys_accounts=(
     'flon.msig'
     'flon.names'
-    'flon.ram'
-    'flon.ramfee'
     'flon.stake'
     'flon.token'
-    'flon.rex'
     'cnyd.token'
 )
 user_accounts=(
@@ -26,7 +23,7 @@ reserved_accounts=(
 ## This is to run locally
 
 echo "### 1. unlock wallet"
-# amcli wallet unlock -n flon-core
+# fucli wallet unlock -n flon-core
 
 source .env
 
@@ -39,7 +36,7 @@ for acct_info in "${sys_accounts[@]}"; do
   acct=${acct_array[0]}
   acctActiveKey="${acct_array[1]}"
   # echo "pub_key --> $acctActiveKey"
-  amcli create account flon $acct $flonOwnerPubKey $acctActiveKey -p flon@active
+  fucli create account flon $acct $flonOwnerPubKey $acctActiveKey -p flon@active
   sleep 1
 done
 echo "....finishing creating system accounts..." && sleep 3
@@ -49,7 +46,7 @@ for acct_info in "${user_accounts[@]}"; do
   IFS=' ' read -r -a array <<< "$acct_info"
   acct=${array[0]}
   acctActiveKey="${array[1]}"
-  amcli create account flon $acct $acctActiveKey -p flon@active
+  fucli create account flon $acct $acctActiveKey -p flon@active
   sleep 1
 done
 echo "....finishing creating user accounts..." && sleep 3
@@ -66,24 +63,24 @@ for contract_info in "${contracts[@]}"; do
   acct=${array[0]}
   contract="${array[1]}"
   echo "# Deploy contract: $contract"
-  amcli set contract $acct $BOOTSTRAP_DIR/$contract -p $acct@active
+  fucli set contract $acct $BOOTSTRAP_DIR/$contract -p $acct@active
   echo "finishing deploying $cct..." & sleep 3
 done
 
 echo "init flon.system..."
-amcli push action flon init '[0, "8,flon"]' -p flon@active
+fucli push action flon init '[0, "8,flon"]' -p flon@active
 echo "finishing init flon"
 sleep 3
 
 echo "Designate flon.msig as privileged account"
-amcli push action flon setpriv '["flon.msig", 1]' -p flon@active
+fucli push action flon setpriv '["flon.msig", 1]' -p flon@active
 echo "finished setpriv...final step!!!"
 sleep 1
 echo
 echo
 echo "Congrats for flon mainnet launch!!!"
 
-echo 
+echo
 echo "check flon.token accounts...."
 ## check accounts
-amcli get table flon.token flon accounts
+fucli get table flon.token flon accounts

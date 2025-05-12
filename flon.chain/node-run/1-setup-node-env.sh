@@ -1,11 +1,38 @@
 #!/bin/bash
 
 # Load environment variables
+if [ -f ~/flon.env ]; then
+    source ~/flon.env
+fi
 source ./conf.env
-source ./"$NET"/conf.bp.env
+
+if [ "$NET" == "devnet" ]; then
+    source ./$NET/conf.bp.env
+else
+    if ${bp_plugin}; then
+        #判断文件在不在
+        if [ ! -f ~/conf.bp.env ]; then
+            echo -e "\e[31mPlease copy the conf.bp.env file to your home directory: ~/conf.bp.env\e[0m"
+            exit 1
+        fi
+        
+        source ~/conf.bp.env
+    fi
+fi
 
 # Define configuration directory
-CONF_DIR=~/.flon_"${NET}"_"${container_id}"
+if [ -z "$node_name" ]; then
+    node_name=flon_"${NET}"_"${container_id}"
+fi
+
+CONF_DIR=~/.${node_name}
+
+#判断文件夹是否存在
+if [ -d "$CONF_DIR" ]; then
+    echo -e "\e[31mConfiguration directory already exists. Please check it first: $CONF_DIR\e[0m"
+    exit 1
+fi
+
 mkdir -p "$CONF_DIR"/conf
 echo "Configuration directory: $CONF_DIR"
 
@@ -44,7 +71,6 @@ copy_configs() {
     cp ./"$NET"/genesis.json    "$CONF_DIR/"
     cp ./docker-compose.yml     "$CONF_DIR/"
     cp ./conf_template/*    "$CONF_DIR"/conf/
-    cp ./"$NET"/node.ini        "$CONF_DIR"/conf/
     cp -r ./bin                 "$CONF_DIR/"
 }
 
@@ -54,9 +80,11 @@ copy_configs
 write_node_env() {
     cat <<EOF >> "$CONF_DIR/node.env"
 NET=$NET
-NODE_IMG_VER=$NODE_IMG_VER
+FULLON_VERSION=$FULLON_VERSION
 container_id=$container_id
+node_name=$node_name
 NODE_HOME=$NODE_HOME
+NODE_WORK_PATH=\$NODE_HOME/\$node_name
 agent_name=$agent_name
 p2p_server_address=$p2p_server_address
 p2p_peer_addresses=(${p2p_peer_addresses[*]})
@@ -69,6 +97,7 @@ history_plugin=$history_plugin
 bp_plugin=$bp_plugin
 signature_providers=(${signature_providers[*]})
 producer_names=(${producer_names[*]})
+NODE_IMG_HEADER=$NODE_IMG_HEADER
 EOF
 }
 
