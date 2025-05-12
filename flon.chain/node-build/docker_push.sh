@@ -8,5 +8,5 @@ else
   exit 1
 fi
 IMAGE_NAME="floncore/funod"
-#  FlinkAige floncore/funod 0.5.8-alpha
+#fullonlabs floncore/funod 0.5.8-alpha
 bash -x ../../commtool/docker_upload.sh $GITHUB_USERNAME ${NODE_IMG_HEADER}${IMAGE_NAME} $FULLON_VERSION
