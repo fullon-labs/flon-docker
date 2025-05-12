@@ -73,7 +73,7 @@ sed -e "s#\${SERVICE_NAME}#$SERVICE_NAME#" \
     -e "s#\${CONTAINER_NAME}#$CONTAINER_NAME#" \
     -e "s#\${NODE_IMG_HEADER}#$NODE_IMG_HEADER#" \
     -e "s#\${FULLON_VERSION}#$FULLON_VERSION#" \
-    -e "s#\${host}#$host#" docker-compose.template.yml > docker-compose.yml
+    -e "s#\${host}#$NOD_DIR#" docker-compose.template.yml > docker-compose.yml
 cp -v ./docker-compose.yml "$NOD_DIR/docker-compose.yml"
 
 # 检查并创建外部 Docker 网络
