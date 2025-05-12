@@ -67,7 +67,6 @@ fi
 cp -v ./bin/run-wallet.sh "$NOD_DIR/bin/"
 cp -v ./config.ini "$NOD_DIR/conf/"
 cp -vr ./bin-script/ "$NOD_DIR/"
-cp -v ./.env "$NOD_DIR/"
 
 
 sed -e "s#\${SERVICE_NAME}#$SERVICE_NAME#" \
