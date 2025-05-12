@@ -5,15 +5,10 @@ set -euo pipefail  # 更严格的错误处理
 NOD_DIR="${1:?请指定节点目录作为参数}"
 NOD_DIR=$(realpath "$NOD_DIR")    
 echo "NOD_DIR: ${NOD_DIR}"
-readonly ENV_FILE="./.env"
 readonly USER_ENV_FILE="$HOME/flon.env"
 
 # 加载环境变量
 set -a
-if [[ -f "$ENV_FILE" ]]; then
-    source "$ENV_FILE"
-fi
-
 if [[ -f "$USER_ENV_FILE" ]]; then
     source "$USER_ENV_FILE"
     FULLON_VERSION="${FULLON_VERSION:-latest}"  # 设置默认值
