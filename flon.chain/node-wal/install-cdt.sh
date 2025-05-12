@@ -1,6 +1,6 @@
 #!bin/sh
 
-docker exec -it fuwal bash
+#docker exec -it fuwal bash
 
 cd /opt/contracts/
 apt install -y git
