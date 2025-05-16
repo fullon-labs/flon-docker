@@ -18,41 +18,27 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    stop_signal: SIGTERM
+    stop_grace_period: 300s
 
   scan-svc:
     container_name: ${SCAN_CONTAINER_NAME}
     image: ${HISTORY_TOOLS_IMAGE}
-    command: >
-      /bin/sh -c "
-        echo 'Waiting for nodeos service...';
-        while ! nc -z ${NODE_HOST} ${NODE_PORT}; do
-          sleep 1;
-        done;
-        
-        echo 'Waiting for PostgreSQL...';
-        until psql -U $POSTGRES_USER -h $PG_HOST -d $POSTGRES_DB -c 'SELECT 1' >/dev/null 2>&1; do
-          sleep 1;
-        done;
-        
-        echo 'Checking if fill_status table exists...';
-        if psql -U $POSTGRES_USER -h $PG_HOST -d $POSTGRES_DB -tAc \"SELECT 1 FROM information_schema.tables WHERE table_schema='chain' AND table_name='fill_status'\" | grep -q 1; then
-          echo 'Table exists, skipping create table...';
-          fill-pg --fill-connect-to=${NODE_HOST}:${NODE_PORT} --fill-table ${FILL_TABLES};
-        else
-          echo 'Table does not exist, will create tables...';
-          fill-pg --fill-connect-to=${NODE_HOST}:${NODE_PORT} --fpg-create --fill-table ${FILL_TABLES};
-        fi;
-        tail -f /dev/null
-      "
+    working_dir: ${SCAN_WORK_PATH}
+    entrypoint: ["./bin/start.sh", "${SCAN_WORK_PATH}", ""]
     environment:
       - PGUSER=${POSTGRES_USER}
       - PGPASSWORD=${POSTGRES_PASSWORD}
       - PGHOST=${PG_HOST}
       - PGDATABASE=${POSTGRES_DB:-postgres}
+    volumes:
+      - ${SCAN_WORK_PATH}:${SCAN_WORK_PATH}
     restart: on-failure
     depends_on:
       postgres:
         condition: service_healthy
+    stop_signal: SIGTERM
+    stop_grace_period: 300s
 
 networks:
   default:
