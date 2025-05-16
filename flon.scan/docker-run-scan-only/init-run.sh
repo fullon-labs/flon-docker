@@ -27,11 +27,13 @@ configure_network() {
             ;;
     esac
 
-    export POSTGRES_PORT="${prefix}${POSTGRES_PORT}"
     export NODE_PORT="${prefix}${NODE_PORT}"
+    export POSTGRES_PORT="${prefix}${POSTGRES_PORT}"
     
-    log "Network ports configured: POSTGRES_PORT=${POSTGRES_PORT}, NODE_PORT=${NODE_PORT}"
+    log "Network ports configured: NODE_PORT=${NODE_PORT}"
 }
+
+# 生成环境文件
 
 # 生成环境文件
 generate_env_file() {
@@ -51,15 +53,12 @@ NODE_HOST=${NODE_HOST}
 POSTGRES_USER=${POSTGRES_USER:-postgres}
 POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
 POSTGRES_PORT=${POSTGRES_PORT}
-POSTGRES_CONTAINER_NAME=${POSTGRES_CONTAINER_NAME}
 SCAN_CONTAINER_NAME=${SCAN_CONTAINER_NAME}
-PG_DATA=${PG_DATA}
 SCAN_WORK_PATH=${SCAN_WORK_PATH}
 
 PG_HOST=${PG_HOST}
-PG_PORT=5432
 POSTGRES_DB=${POSTGRES_DB:-flonscan}
-
+PG_PORT=${POSTGRES_PORT}
 # Service Configuration
 HISTORY_TOOLS_IMAGE=${NODE_IMG_HEADER}${HISTORY_TOOLS_IMAGE}:${HISTORY_VERSION}
 
@@ -69,18 +68,8 @@ EOF
     log "Generated environment file: ${output_file}"
 }
 
-start_services() {
-    # 切换工作目录
-    cd "${SCAN_WORK_PATH}" || error "Failed to change directory to ${SCAN_WORK_PATH}"
-    log "Preparing Docker service startup script in ${SCAN_WORK_PATH}"
 
-    # 创建 PostgreSQL 数据目录并设置权限
-    if [ -n "${PG_DATA}" ]; then
-        sudo mkdir -p "${PG_DATA}"
-        sudo chown -R "$(whoami):$(whoami)" "${PG_DATA}"
-    else
-        error "PG_DATA is not set"
-    fi
+start_services() {
 
     # 加载 Docker Compose 环境变量
     local ENV_FILE="${SCAN_WORK_PATH}/config/scan.env"
@@ -112,6 +101,11 @@ EOF
     "${START_SCRIPT}" || error "Failed to start services via ${START_SCRIPT}"
 }
 
+open_port() {
+    if [[ "$(uname)" == "Linux" ]]; then
+        sudo iptables -I INPUT -p tcp -m tcp --dport "$1" -j ACCEPT
+    fi
+}
 
 main() {
     # 加载环境变量
@@ -127,8 +121,7 @@ main() {
     echo "[INFO] SCAN_WORK_PATH=${SCAN_WORK_PATH}"
     echo "[INFO] SCAN_CONTAINER_NAME=${SCAN_CONTAINER_NAME}"
     echo "[INFO] NET=${NET}"
-
-    # 配置网络（你需实现 configure_network 函数）
+    
     configure_network
 
     echo "[INFO] Checking if Docker network 'flon' exists..."
@@ -144,25 +137,17 @@ main() {
     mkdir -p "${SCAN_WORK_PATH}/config"
     mkdir -p "${SCAN_WORK_PATH}/logs"
     mkdir -p "${SCAN_WORK_PATH}/bin"
-    mkdir -p "${PG_DATA}"
 
     # 生成环境变量文件（你需实现 generate_env_file 函数）
     generate_env_file
-    cp start.sh "${SCAN_WORK_PATH}/bin/"
+    cp ../docker-run/start.sh "${SCAN_WORK_PATH}/bin/"
     cp docker-compose.yaml "${SCAN_HOME_PATH}/"
     sudo chmod +x "${SCAN_WORK_PATH}/bin/start.sh"
 
     # 启动服务（你需实现 start_services 函数）
     start_services "$@"
 
-    # 修改 PostgreSQL 配置
-    POSTGRES_CONF="${PG_DATA}/postgresql.conf"
-    if [ -f "$POSTGRES_CONF" ]; then
-        echo "[INFO] Modifying PostgreSQL max_connections in ${POSTGRES_CONF}"
-        sudo sed -i 's/^max_connections = .*/max_connections = 500/' "$POSTGRES_CONF"
-    else
-        echo "[WARN] PostgreSQL config not found at: $POSTGRES_CONF"
-    fi
+    open_port ${POSTGRES_PORT}
 
     # 打印部署完成日志
     log "Deployment completed successfully"
