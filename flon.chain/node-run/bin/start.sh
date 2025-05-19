@@ -19,7 +19,9 @@ elif [[ ! -f $flon/data/blocks/blocks.index ]]; then
   OPTIONS="$OPTIONS --genesis-json $flon/conf/genesis.json"
 fi
 
-trap 'echo "[$(date '+%Y-%m-%d %H:%M:%S')]Start Shutdown"; kill $(jobs -p); wait; echo "[$(date '+%Y-%m-%d %H:%M:%S')]Shutdown ok"' SIGINT SIGTERM
+trap 'echo "[$(date)]Start Shutdown"; kill $(jobs -p); wait; echo "[$(date)]Shutdown ok"' SIGINT SIGTERM
+
+
 
 ## launch node program...
 funod $PARAMs $OPTIONS >> $NEW_LOGFILE 2>&1 &

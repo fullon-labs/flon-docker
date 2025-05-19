@@ -140,7 +140,7 @@ main() {
 
     # 生成环境变量文件（你需实现 generate_env_file 函数）
     generate_env_file
-    cp ../docker-run/start.sh "${SCAN_WORK_PATH}/bin/"
+    cp ./start.sh "${SCAN_WORK_PATH}/bin/"
     cp docker-compose.yaml "${SCAN_HOME_PATH}/"
     sudo chmod +x "${SCAN_WORK_PATH}/bin/start.sh"
 

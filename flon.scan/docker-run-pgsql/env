@@ -1,0 +1,9 @@
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=password
+POSTGRES_PORT=15432
+NET=testnet
+MODULE=scan
+POSTGRES_DB=scan_testnet
+POSTGRES_CONTAINER_NAME=postgres_scan_testnet
+PG_HOME_PATH=/mnt/data1/postgres_scan_testnet
+PG_DATA=/mnt/data1/postgres_scan_testnet/pgdata
