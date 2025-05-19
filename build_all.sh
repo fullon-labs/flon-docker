@@ -83,8 +83,7 @@ get_version_from_cmake() {
     patch=$(echo "$content" | grep -Po 'set\s*\(\s*VERSION_PATCH\s+\K[0-9]+')
 
     # Extract suffix, handling both quoted and unquoted values without capturing ')'
-    suffix=$(echo "$content" | grep -Po 'set\s*\(\s*VERSION_SUFFIX\s+(?:"\K[^"]*|\K[^)\s]+)')
-
+    suffix=$(echo "$content" | grep -v '^\s*#' | grep -Po 'set\s*\(\s*VERSION_SUFFIX\s+(?:"\K[^"]*|\K[^)\s]+)')
     # Combine into full version string (only append suffix if it exists)
     if [ -n "$suffix" ]; then
         echo "${major}.${minor}.${patch}-${suffix}"
