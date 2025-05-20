@@ -1,13 +1,16 @@
 
-mkdir -p ~/.fuwal
 
 git clone git@github.com:fullon-labs/flon-docker.git
+
+
+
 
 cd flon-docker
 cp ./flon.env ~/flon.env
 #修改 ~/flon.evn set NET mainnet
-export NET=mainnet
+#NET=mainnet
 
+mkdir -p ~/.fuwal
 cd flon-docker/flon.chain/node-wal
 ./run-fuwal.sh ~/.fuwal
 
