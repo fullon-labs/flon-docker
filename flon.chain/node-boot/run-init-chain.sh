@@ -83,10 +83,7 @@ ACCOUNTS=(
 echo "🚀 Creating system accounts..."
 for acc in "${ACCOUNTS[@]}"; do
   echo "👉 Creating account $acc by creator $CREATOR"
-  fucli push action flon newaccount '["'"${CREATOR}"'", "'"${acc}"'",
-      [ 1, [], [[["flon", "active"], 1]], [] ],
-      [ 1, [], [[["flon", "active"], 1]], []] ]
-    ]' -p "${CREATOR}@active"
+  $CLI create account "${CREATOR}" "${acc}" "${CREATOR}@active" "${CREATOR}@active"  -p "${CREATOR}@active"
 done
 echo "✅ System accounts created"
 sleep 3
