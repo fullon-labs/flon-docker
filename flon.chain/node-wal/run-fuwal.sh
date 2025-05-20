@@ -66,8 +66,8 @@ fi
 
 cp -v ./bin/run-wallet.sh "$NOD_DIR/bin/"
 cp -v ./config.ini "$NOD_DIR/conf/"
-cp -vr ./bin-script/ "$NOD_DIR/"
-
+mkdir -p "$NOD_DIR/bin-script/"
+cp -vr ./bin-script "$NOD_DIR/"
 
 sed -e "s#\${SERVICE_NAME}#$SERVICE_NAME#" \
     -e "s#\${CONTAINER_NAME}#$CONTAINER_NAME#" \
@@ -85,14 +85,22 @@ else
 fi
 cd "$NOD_DIR" || exit 1
 # 启动Docker容器
-echo "正在启动Docker容器..."
-if docker-compose up -d; then
-    echo "Docker容器启动成功"
+
+# 判断 compose 命令：优先使用 docker compose，再 fallback 到 docker-compose
+if command -v docker-compose >/dev/null 2>&1; then
+    COMPOSE_CMD="docker-compose"
+elif docker compose version >/dev/null 2>&1; then
+    COMPOSE_CMD="docker compose"
 else
-    echo "Docker容器启动失败" >&2
+    echo "❌ 未检测到 docker compose 或 docker-compose。" >&2
     exit 1
 fi
 
-# 注释掉的iptables规则（保留供参考）
-# echo "如需开放端口7777，请取消以下行的注释:"
-# echo "# sudo iptables -I INPUT -p tcp --dport 7777 -j ACCEPT"
+echo "🚀 正在启动 Docker 容器..."
+
+if $COMPOSE_CMD up -d; then
+    echo "✅ Docker 容器启动成功"
+else
+    echo "❌ Docker 容器启动失败" >&2
+    exit 1
+fi

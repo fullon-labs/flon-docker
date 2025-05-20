@@ -10,7 +10,6 @@ services:
       - ${host}/:/opt/flon
       - ${host}/bin/.bashrc:/root/.bashrc
       - ${host}/bin-script:/root/bin
-      - /opt/contracts:/opt/contracts
     dns:
       - 114.114.114.114
       - 8.8.8.8
