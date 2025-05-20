@@ -6,7 +6,7 @@ source ~/.bashrc
 name=$1
 creator=flon
 
-ut
+um
 
 ret=`mcli create key --to-console`
 echo "create key: $ret"
