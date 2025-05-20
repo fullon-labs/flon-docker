@@ -169,4 +169,33 @@ sleep 1
 echo "🚀 Initializing system..."
 $CLI push action flon init '[0, "8,FLON"]' -p flon@active
 
+
+sleep 1
+
+NEW_ACCOUNTS=(
+  securewarden
+  flon.creator
+  flon.mtoken
+  flonian
+)
+
+# add code
+ADD_CODE_ACCOUNTS=(
+  flon.creator
+  flon.mtoken
+  flonian
+)
+for acc in "${NEW_ACCOUNTS[@]}"; do
+  echo "👉 Creating account $acc by creator $CREATOR"
+  $CLI system newaccount "${CREATOR}" "${acc}" "${CREATOR}@active" "${CREATOR}@active" --fund-account "5 FLON" -p "${CREATOR}@active"
+done
+echo "✅ New accounts created"
+sleep 3
+# add code
+for acc in "${ADD_CODE_ACCOUNTS[@]}"; do
+  echo "👉 Adding code to account $acc"
+  $CLI set account permission "$acc" active --add-code
+done
+
+
 echo "✅ FLON chain initialization complete ✅"
