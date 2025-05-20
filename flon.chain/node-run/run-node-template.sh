@@ -157,4 +157,7 @@ open_port "${RPC_PORT}"
 open_port "${P2P_PORT}"
 open_port "${HIST_WS_PORT}"
 
+#save iptables
+sudo service iptables save
+
 echo "Setup completed successfully!"
