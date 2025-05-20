@@ -4,7 +4,7 @@
 
 cd /opt/contracts/
 apt install -y git
-curl -o flon.cdt.deb https://flon-test.oss-cn-hongkong.aliyuncs.com/deb/flon.cdt_0.3.2-alpha_amd64.deb
+curl -o flon.cdt.deb https://flon-test.oss-cn-hongkong.aliyuncs.com/deb/flon.cdt_0.5.0-1_amd64.deb
 
 git clone https://github.com/fullon-labs/toolkit.contracts.git
 git clone https://github.com/fullon-labs/flon.contracts.git
