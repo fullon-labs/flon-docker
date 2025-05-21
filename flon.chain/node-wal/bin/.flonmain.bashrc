@@ -35,7 +35,7 @@ function generate_key_pair() {
 }
 
 
-fuction mreg() {
+function mreg() {
   local creator="$1"
   local acct="$2"
   local pubkey="$3"
@@ -86,7 +86,7 @@ function mnew() {
   mreg "$creator" "$name" "$pubKey"
 }
 
-mset() {
+function mset() {
   local con="$1"
   local condir="$2"
 
