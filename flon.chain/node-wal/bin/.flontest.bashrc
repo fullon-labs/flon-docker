@@ -1,4 +1,4 @@
-source ~/bin/flonchain_test.env
+source ~/bin/.flontest.env
 
 alias newt="fucli wallet create -f ~/.password.txt -n $twalname"
 function ut() {

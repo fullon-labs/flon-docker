@@ -1,4 +1,4 @@
-source ~/bin/flonchain_main.env
+source ~/bin/.flonmain.env
 
 alias newm="fucli wallet create -f ~/.main_password.txt -n $mwalname"
 
