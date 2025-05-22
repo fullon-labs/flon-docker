@@ -12,7 +12,7 @@ while IFS=',' read -r ALERT_NAME HEAD_KEY TABLE_NAME CONTAINER_NAME; do
 
   # 查询数据库获取最新 head
   echo "[INFO][$(date '+%F %T')] Executing SQL: select head from $TABLE_NAME" >> "$logfile"
-  new_head=$(docker run --rm --network host -e PGPASSWORD="$PG_PASS" postgres:14 \
+  new_head=$(docker run --rm --network host -e PGPASSWORD="$PG_PASS" postgres:15 \
     psql -t -A -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -d "$PG_DB" \
     -c "select head from ${TABLE_NAME};" 2>> "$logfile" || echo "")
 
