@@ -10,7 +10,6 @@ if [ "$NET" == "devnet" ]; then
     source ./$NET/conf.bp.env
 else
     if ${bp_plugin}; then
-        #判断文件在不在
         if [ ! -f ~/conf.bp.env ]; then
             echo -e "\e[31mPlease copy the conf.bp.env file to your home directory: ~/conf.bp.env\e[0m"
             exit 1
@@ -22,12 +21,12 @@ fi
 
 # Define configuration directory
 if [ -z "$node_name" ]; then
-    node_name=flon_"${NET}"_"${container_id}"
+    echo "❌ Error: node_name is not set" >&2
+    exit 1
 fi
 
 CONF_DIR=~/.${node_name}
 
-#判断文件夹是否存在
 if [ -d "$CONF_DIR" ]; then
     echo -e "\e[31mConfiguration directory already exists. Please check it first: $CONF_DIR\e[0m"
     exit 1
@@ -81,7 +80,6 @@ write_node_env() {
     cat <<EOF >> "$CONF_DIR/node.env"
 NET=$NET
 FULLON_VERSION=$FULLON_VERSION
-container_id=$container_id
 node_name=$node_name
 NODE_HOME=$NODE_HOME
 NODE_WORK_PATH=\$NODE_HOME/\$node_name
