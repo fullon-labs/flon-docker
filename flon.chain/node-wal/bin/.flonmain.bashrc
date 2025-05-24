@@ -1,7 +1,12 @@
 source ~/bin/.flonmain.env
 
 alias newm="fucli wallet create -f ~/.main_password.txt -n $mwalname"
-
+alias macct="fucli -u $murl get account"
+alias mcli="fucli -u $murl"
+alias mtbl="fucli -u $murl get table"
+alias mtran="fucli -u $murl transfer"
+alias mpush="fucli -u $murl push action"
+alias mpki="fucli wallet import -n ${mwalname} --private-key "
 function um() {
     if [ ! -f ~/.main_password.txt ]; then
         echo "❌ ~/.main_password.txt not found"
@@ -106,11 +111,6 @@ function mset() {
   fucli -u "$murl" set contract "$con" "$contract_path" -p "${con}@active"
 }
 
-alias macct="fucli -u $murl get account"
-alias mcli="fucli -u $murl"
-alias mtbl="fucli -u $murl get table"
-alias mtran="fucli -u $murl transfer"
-alias mpush="fucli -u $murl push action"
-alias mpki="fucli wallet import -n ${mwalname} --private-key "
+
 
 echo "murl is: $murl"

@@ -1,6 +1,13 @@
 source ~/bin/.flontest.env
 
 alias newt="fucli wallet create -f ~/.password.txt -n $twalname"
+alias tacct="fucli -u $turl get account"
+alias tcli="fucli -u $turl"
+alias ttbl="fucli -u $turl get table"
+alias ttran="fucli -u $turl transfer"
+alias tpush="fucli -u $turl push action"
+alias pki="fucli wallet import -n ${twalname} --private-key "
+
 function ut() {
     if [ ! -f ~/.password.txt ]; then
         echo "❌ ~/.password.txt not found"
@@ -101,10 +108,5 @@ tset() {
   fucli -u "$turl" set contract "$con" "$path" -p "${con}@active"
 }
 
-alias tacct="fucli -u $turl get account"
-alias tcli="fucli -u $turl"
-alias ttbl="fucli -u $turl get table"
-alias ttran="fucli -u $turl transfer"
-alias tpush="fucli -u $turl push action"
-alias pki="fucli wallet import -n ${twalname} --private-key "
+
 echo "turl is: $turl"
