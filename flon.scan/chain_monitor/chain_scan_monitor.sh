@@ -54,3 +54,13 @@ while IFS=',' read -r ALERT_NAME HEAD_KEY TABLE_NAME CONTAINER_NAME; do
     echo "[INFO][$(date '+%F %T')] $ALERT_NAME head 正常更新，状态清除" >> "$logfile"
   fi
 done < monitors.conf
+
+
+weekday=$(date '+%u')  # 周一是1，周日是7
+hour=$(date '+%H')
+
+if { [ "$weekday" = "1" ] || [ "$weekday" = "4" ]; } && [ "$hour" = "09" ]; then
+  text='{"parse_mode": "markdown","chat_id": '"$CHAT_ID"',"text": "✅ 扫链监控任务正常执行中（每周一 & 四例行确认）"}'
+  curl -s -X POST -H 'Content-Type: application/json' -d "$text" "$TG_BOT" >> "$logfile"
+  echo "[INFO][$(date '+%F %T')] 每周例行确认消息已发送（周一/周四）" >> "$logfile"
+fi
