@@ -31,6 +31,7 @@ while IFS=',' read -r ALERT_NAME HEAD_KEY TABLE_NAME CONTAINER_NAME; do
   $redis_connect SET "$HEAD_KEY" "$new_head" > /dev/null
 
   if [ "$new_head" = "$old_head" ]; then
+    echo "[DEBUG][$(date '+%F %T')] new_head=$new_head, old_head=$old_head, alert_status=$alert_status" >> "$logfile"
     if [ -z "$alert_status" ]; then
       $redis_connect SET "$ALERT_NAME" 1 && $redis_connect EXPIRE "$ALERT_NAME" 3600
       echo "[WARN][$(date '+%F %T')] No head change, set alert stage 1" >> "$logfile"
