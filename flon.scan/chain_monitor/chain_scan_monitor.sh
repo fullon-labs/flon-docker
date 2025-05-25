@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu
 
-source /absolute/path/to/env
+source ./env
 logfile="/tmp/log.txt"
 redis_connect="redis-cli -h $REDIS_HOST -p $REDIS_PORT -a $REDIS_PASS"
 
