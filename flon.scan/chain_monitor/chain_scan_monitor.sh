@@ -76,7 +76,7 @@ while IFS=',' read -r ALERT_NAME HEAD_KEY TABLE_NAME CONTAINER_NAME; do
     $redis_connect DEL "$ALERT_NAME:count" > /dev/null
     echo "[INFO][$(date '+%F %T')] $ALERT_NAME head 正常更新，状态清除" >> "$logfile"
   fi
-done < /absolute/path/to/monitors.conf
+done < ./monitors.conf
 
 # 每周一/四 09:00 例行执行确认
 weekday=$(date '+%u')  # 1=周一, 4=周四
