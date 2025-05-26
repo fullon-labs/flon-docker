@@ -81,8 +81,11 @@ done < ./monitors.conf
 # 每周一/四 09:00 例行执行确认
 weekday=$(date '+%u')  # 1=周一, 4=周四
 hour=$(date '+%H')
-if { [ "$weekday" = "1" ] || [ "$weekday" = "4" ]; } && [ "$hour" = "09" ]; then
-  text='{"parse_mode": "markdown","chat_id": '"$CHAT_ID"',"text": "✅ 扫链监控任务正常执行中（每周一 & 四例行确认）"}'
+minute=$(date '+%M')  # ✅ 加上这行
+hostname=$(hostname)
+
+if { [ "$weekday" = "1" ] || [ "$weekday" = "4" ]; } && [ "$hour" = "09" ] && [ "$minute" = "00" ]; then
+  text='{"parse_mode": "markdown","chat_id": '"$CHAT_ID"',"text": "✅ ['$hostname'] 扫链监控任务正常执行中（每周一 & 四例行确认）"}'
   curl -s -X POST -H 'Content-Type: application/json' -d "$text" "$TG_BOT" >> "$logfile"
-  echo "[INFO][$(date '+%F %T')] 每周例行确认消息已发送（周一/周四）" >> "$logfile"
+  echo "[INFO][$(date '+%F %T')] 每周例行确认消息已发送（周一/周四） hostname=$hostname" >> "$logfile"
 fi
