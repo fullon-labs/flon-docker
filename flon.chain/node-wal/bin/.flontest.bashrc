@@ -7,6 +7,11 @@ alias ttbl="fucli -u $turl get table"
 alias ttran="fucli -u $turl transfer"
 alias tpush="fucli -u $turl push action"
 alias pki="fucli wallet import -n ${twalname} --private-key "
+alias pkeys='fucli wallet private_keys -n ${twalname} --password "$(cat ~/.password.txt)" '
+
+function plist() {
+  fucli wallet private_keys -n ${twalname} --password "$(cat ~/.password.txt)" | grep -o '"5[A-Za-z0-9]*"' | tr -d '"'
+}
 
 function ut() {
     if [ ! -f ~/.password.txt ]; then
