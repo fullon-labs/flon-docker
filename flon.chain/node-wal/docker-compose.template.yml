@@ -6,6 +6,7 @@ services:
     container_name: ${CONTAINER_NAME}
     working_dir: /opt/flon
     entrypoint: ["./bin/run-wallet.sh", "."]
+    hostname: ${hostname}_${CONTAINER_NAME}
     volumes:
       - ${host}/:/opt/flon
       - ${host}/bin/.bashrc:/root/.bashrc
