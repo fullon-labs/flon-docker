@@ -7,7 +7,7 @@ redis_connect="redis-cli -h $REDIS_HOST -p $REDIS_PORT -a $REDIS_PASS"
 
 > "$logfile"  # 清空日志，每次执行前
 
-while IFS=',' read -r ALERT_NAME HEAD_KEY TABLE_NAME CONTAINER_NAME; do
+while IFS=',' read -r ALERT_NAME HEAD_KEY TABLE_NAME CONTAINER_NAME PG_DB; do
   echo "------------------------------" >> "$logfile"
   echo "[INFO][$(date '+%F %T')] Checking: $ALERT_NAME" >> "$logfile"
   echo "[INFO][$(date '+%F %T')] Table: $TABLE_NAME, Redis Key: $HEAD_KEY, Container: $CONTAINER_NAME" >> "$logfile"
