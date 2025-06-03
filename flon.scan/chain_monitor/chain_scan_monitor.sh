@@ -59,10 +59,20 @@ while IFS=',' read -r ALERT_NAME HEAD_KEY TABLE_NAME CONTAINER_NAME; do
         else
           echo "[ERROR][$(date '+%F %T')] 容器 $CONTAINER_NAME 重启失败，请检查" >> "$logfile"
         fi
-      else
-        echo "[ERROR][$(date '+%F %T')] Head still not updated. Retry limit reached (>$restart_count), giving up." >> "$logfile"
-        text='{"parse_mode": "markdown","chat_id": '"$CHAT_ID"',"text": "*'"$ALERT_NAME"' 扫链容器重启已超过 3 次，停止重启，请人工检查 🚨*"}'
-        curl -s -X POST -H 'Content-Type: application/json' -d "$text" "$TG_BOT" >> "$logfile"
+     else
+        last_notify=$($redis_connect GET "$ALERT_NAME:last_notify" || echo 0)
+        now_ts=$(date +%s)
+
+        if (( now_ts - last_notify >= 10800 )); then  # 10800 秒 = 3 小时
+          $redis_connect SET "$ALERT_NAME:last_notify" "$now_ts"
+          $redis_connect EXPIRE "$ALERT_NAME:last_notify" 10800
+
+          echo "[ERROR][$(date '+%F %T')] Head still not updated. Retry limit reached (>$restart_count), sending periodic reminder." >> "$logfile"
+          text='{"parse_mode": "markdown","chat_id": '"$CHAT_ID"',"text": "*'"$ALERT_NAME"' 扫链容器重启已超过 3 次，停止重启，请人工检查 🚨*"}'
+          curl -s -X POST -H 'Content-Type: application/json' -d "$text" "$TG_BOT" >> "$logfile"
+        else
+          echo "[INFO][$(date '+%F %T')] 超过3次后提醒间隔未到，跳过通知" >> "$logfile"
+        fi
       fi
     fi
   else
@@ -74,6 +84,7 @@ while IFS=',' read -r ALERT_NAME HEAD_KEY TABLE_NAME CONTAINER_NAME; do
     fi
     $redis_connect DEL "$ALERT_NAME" > /dev/null
     $redis_connect DEL "$ALERT_NAME:count" > /dev/null
+    $redis_connect DEL "$ALERT_NAME:last_notify" > /dev/null
     echo "[INFO][$(date '+%F %T')] $ALERT_NAME head 正常更新，状态清除" >> "$logfile"
   fi
 done < ./monitors.conf
