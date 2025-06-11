@@ -44,20 +44,40 @@ function generate_key_pair() {
   echo "$pubKey"
 }
 
-
+function mreg() {
+  echo "执行的测试链"
+  treg "$@"
+}
 
 function treg() {
   local creator="$1"
   local acct="$2"
-  local pubkey="$3"
+  local auth="$3"
 
-  if [[ -z "$creator" || -z "$acct" || -z "$pubkey" ]]; then
-    echo "❌ 用法: create_flon_account <creator> <new_account> <pubkey>"
+  if [[ -z "$creator" || -z "$acct" ]]; then
+    echo "❌ 用法: treg <creator> <new_account> [pubkey | account | account@perm]"
     return 1
   fi
 
-  echo "🚀 正在创建账号 [$acct]，由 [$creator] 创建，使用公钥 [$pubkey]"
-  fucli -u "$turl" system newaccount "$creator" "$acct" "$pubkey" \
+  # 如果账号已存在则跳过
+  if mcli get account "$acct" &>/dev/null; then
+    echo "⚠️ 账号 [$acct] 已存在，跳过"
+    return 0
+  fi
+
+  # 判断 auth 的格式
+  if [[ -z "$auth" ]]; then
+    auth="FU6Dm6xR3JxpeEhdswTV4qTawYXjBcV4gtWjRPELaS9wbQzNmSUC"  # 默认公钥
+  elif [[ "$auth" =~ ^[a-z1-5.]+@[a-z]+$ ]]; then
+    # 已经是 account@perm 格式，保留原样
+    :
+  elif mcli get account "$auth" &>/dev/null; then
+    # 是账户名，默认用 @active 权限
+    auth="${auth}@active"
+  fi
+
+  echo "🚀 创建账号 [$acct]，由 [$creator] 创建，授权 [$auth]"
+  mcli system newaccount "$creator" "$acct" "$auth" \
     --fund-account "5.00000000 FLON" -p "$creator"
 }
 
@@ -113,5 +133,10 @@ tset() {
   fucli -u "$turl" set contract "$con" "$path" -p "${con}@active"
 }
 
+
+alias mcli='echo "执行的测试链" && tcli'
+alias mtran='echo "执行的测试链" && ttran'
+alias mpush='echo "执行的测试链" && tpush'
+alias um='echo "执行的测试链" && ut'
 
 echo "turl is: $turl"

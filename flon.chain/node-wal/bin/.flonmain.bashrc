@@ -19,7 +19,6 @@ function um() {
     fucli wallet unlock -n "$mwalname" --password "$(cat ~/.main_password.txt)"
 }
 
-
 function generate_key_pair() {
   local result
   result=$(tcli create key --to-console)
@@ -39,20 +38,35 @@ function generate_key_pair() {
   echo "$pubKey"
 }
 
-
 function mreg() {
   local creator="$1"
   local acct="$2"
-  local pubkey="$3"
+  local input="$3"
 
-  if [[ -z "$creator" || -z "$acct" || -z "$pubkey" ]]; then
-    echo "❌ 用法: mreg <creator> <new_account> <pubkey>"
+  if [[ -z "$creator" || -z "$acct" || -z "$input" ]]; then
+    echo "❌ 用法: mreg <creator> <new_account> <pubkey | account | account@perm>"
     return 1
   fi
 
-  echo "🚀 创建账号 [$acct] by [$creator] with pubkey [$pubkey]"
+  # 跳过已存在账号
+  if fucli -u "$murl" get account "$acct" &>/dev/null; then
+    echo "⚠️ 账号 [$acct] 已存在，跳过"
+    return 0
+  fi
 
-  fucli -u "$murl" system newaccount "$creator" "$acct" "$pubkey" \
+  # 判断 input 类型：是公钥、权限格式、还是账户名
+  local auth="$input"
+  if [[ "$input" =~ ^[a-z1-5.]+@[a-z]+$ ]]; then
+    # 格式为 account@perm，保留原样
+    :
+  elif fucli -u "$murl" get account "$input" &>/dev/null; then
+    # 是一个账户名，转为权限格式
+    auth="${input}@owner"
+  fi
+
+  echo "🚀 创建账号 [$acct] by [$creator] with auth [$auth]"
+
+  fucli -u "$murl" system newaccount "$creator" "$acct" "$auth" \
     --fund-account "0.00300000 FLON" -p "$creator"
 }
 
