@@ -65,15 +65,22 @@ function treg() {
     return 0
   fi
 
-  # 判断 auth 的格式
+  # 判断 auth 的格式和来源
   if [[ -z "$auth" ]]; then
-    auth="FU6Dm6xR3JxpeEhdswTV4qTawYXjBcV4gtWjRPELaS9wbQzNmSUC"  # 默认公钥
-  elif [[ "$auth" =~ ^[a-z1-5.]+@[a-z]+$ ]]; then
-    # 已经是 account@perm 格式，保留原样
+    # 为空，使用默认公钥
+    auth="FU6Dm6xR3JxpeEhdswTV4qTawYXjBcV4gtWjRPELaS9wbQzNmSUC"
+  elif [[ "$auth" =~ ^F[A-Z0-9]{50,}$ ]]; then
+    # 是 FLON 公钥格式，直接使用
+    :
+  elif [[ "$auth" =~ ^[a-z1-5.]{1,12}@[a-z]{1,12}$ ]]; then
+    # 是完整权限名（如 account@active）
     :
   elif mcli get account "$auth" &>/dev/null; then
-    # 是账户名，默认用 @active 权限
+    # 是账户名，自动补 @active
     auth="${auth}@active"
+  else
+    echo "❌ 无效的 auth 参数: $auth"
+    return 1
   fi
 
   echo "🚀 创建账号 [$acct]，由 [$creator] 创建，授权 [$auth]"

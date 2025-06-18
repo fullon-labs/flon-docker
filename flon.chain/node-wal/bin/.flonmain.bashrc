@@ -54,14 +54,20 @@ function mreg() {
     return 0
   fi
 
-  # 判断 input 类型：是公钥、权限格式、还是账户名
-  local auth="$input"
-  if [[ "$input" =~ ^[a-z1-5.]+@[a-z]+$ ]]; then
-    # 格式为 account@perm，保留原样
+local auth="$input"
+
+  if [[ "$input" =~ ^F[A-Z0-9]{50,}$ ]]; then
+    # 是公钥（如 FLON6...），保持原样
+    :
+  elif [[ "$input" =~ ^[a-z1-5.]{1,12}@(owner|active|code|[a-z1-5]{1,12})$ ]]; then
+    # 是完整权限格式（如 nest.admin@active），保留原样
     :
   elif fucli -u "$murl" get account "$input" &>/dev/null; then
-    # 是一个账户名，转为权限格式
-    auth="${input}@owner"
+    # 是账户名，补上 @active
+    auth="${input}@active"
+  else
+    echo "❌ 无效的授权格式: $input"
+    return 1
   fi
 
   echo "🚀 创建账号 [$acct] by [$creator] with auth [$auth]"
