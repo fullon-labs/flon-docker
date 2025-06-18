@@ -38,6 +38,7 @@ while IFS=',' read -r ALERT_NAME HEAD_KEY TABLE_NAME CONTAINER_NAME PG_DB; do
       $redis_connect EXPIRE "$ALERT_NAME" 3600
       $redis_connect SET "$ALERT_NAME:count" 1
       $redis_connect EXPIRE "$ALERT_NAME:count" 3600
+      $redis_connect DEL "$ALERT_NAME:last_notify"  # 🔥关键行：重置提醒节流状态
       echo "[WARN][$(date '+%F %T')] No head change, set alert stage 1, count=1" >> "$logfile"
     else
       restart_count=$($redis_connect GET "$ALERT_NAME:count" || echo 0)
