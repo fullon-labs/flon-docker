@@ -17,6 +17,8 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN python3 -m pip install pygments
 
 ENV SRC_DIR=/flon.cdt
+ARG BRANCH=main
+ENV BRANCH=${BRANCH}
 RUN mkdir -p ${SRC_DIR}
 WORKDIR ${SRC_DIR}
 

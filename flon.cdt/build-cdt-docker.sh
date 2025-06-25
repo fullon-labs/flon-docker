@@ -6,4 +6,10 @@ fi
 # Default values for build parameters
 CDT_VERSION=${CDT_VERSION:-"0.5.0-alpha"}
 
-docker build -t ${NODE_IMG_HEADER}floncore/floncdt:${CDT_VERSION} . --no-cache
+echo "Building image: ${NODE_IMG_HEADER}floncore/floncdt:${CDT_VERSION}"
+echo "Build args: CDT_VERSION=${CDT_VERSION}"
+
+docker build \
+  --build-arg CDT_VERSION="${CDT_VERSION}" \
+  -t "${NODE_IMG_HEADER}floncore/floncdt:${CDT_VERSION}" \
+  . --no-cache
