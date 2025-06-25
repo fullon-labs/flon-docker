@@ -21,7 +21,7 @@ RUN mkdir -p ${SRC_DIR}
 WORKDIR ${SRC_DIR}
 
 # Clone and build flon.cdt
-RUN git clone --recursive https://github.com/fullon-labs/flon.cdt.git ${SRC_DIR} && \
+RUN git clone -b ${BRANCH} --recursive https://github.com/fullon-labs/flon.cdt.git ${SRC_DIR} && \
     export CCACHE_DISABLE=1 && \
     mkdir build && cd build && \
     cmake -DPython_ROOT_DIR=/usr/local .. && \
