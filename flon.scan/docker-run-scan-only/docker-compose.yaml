@@ -18,6 +18,9 @@ services:
     restart: on-failure
     stop_signal: SIGTERM
     stop_grace_period: 5s
+    dns:
+      - 8.8.8.8
+      - 223.5.5.5
 
 networks:
   default:

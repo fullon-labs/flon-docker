@@ -13,8 +13,6 @@ git clone https://github.com/fullon-labs/flon.contracts.git
 apt install -y libssl-dev libboost-all-dev libgmp3-dev libbz2-dev libreadline-dev libncurses5-dev libusb-1.0-0-dev libudev-dev libusb-dev libusb-1.0-0
 apt install libcurl4-gnutls-dev cmake -y
 apt install -y g++ libz3-dev
-
-cd /opt/contracts/
 dpkg -i flon.cdt.deb
 
 
