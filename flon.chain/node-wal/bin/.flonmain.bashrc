@@ -54,8 +54,8 @@ function mreg() {
     return 0
   fi
 
-local auth="$input"
-
+  local auth="$input"
+  
   if [[ "$input" =~ ^F[A-Z0-9]{50,}$ ]]; then
     # 是公钥（如 FLON6...），保持原样
     :
