@@ -17,13 +17,12 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN python3 -m pip install pygments
 
 ENV SRC_DIR=/flon.cdt
-ARG BRANCH=main
-ENV BRANCH=${BRANCH}
+ARG CDT_BRANCH=main
 RUN mkdir -p ${SRC_DIR}
 WORKDIR ${SRC_DIR}
 
 # Clone and build flon.cdt
-RUN git clone -b ${BRANCH} --recursive https://github.com/fullon-labs/flon.cdt.git ${SRC_DIR} && \
+RUN git clone -b ${CDT_BRANCH} --recursive https://github.com/fullon-labs/flon.cdt.git ${SRC_DIR} && \
     export CCACHE_DISABLE=1 && \
     mkdir build && cd build && \
     cmake -DPython_ROOT_DIR=/usr/local .. && \

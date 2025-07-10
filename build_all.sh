@@ -111,11 +111,12 @@ check_all_versions() {
     log "Checking all versions before starting..."
 
     if [ "$BUILD_CHAIN" = true ]; then
-        check_version "flon.chain" "https://raw.githubusercontent.com/fullon-labs/flon-core/main/CMakeLists.txt" "$FULLON_VERSION"
+        check_version "flon.chain" "https://raw.githubusercontent.com/fullon-labs/flon-core/${FULLON_BRANCH}/CMakeLists.txt" "$FULLON_VERSION"
     fi
 
     if [ "$BUILD_CDT" = true ]; then
-        check_version "flon.cdt" "https://raw.githubusercontent.com/fullon-labs/flon.cdt/main/CMakeLists.txt" "$CDT_VERSION"
+        echo https://raw.githubusercontent.com/fullon-labs/flon.cdt/${CDT_BRANCH}/CMakeLists.txt
+        check_version "flon.cdt" "https://raw.githubusercontent.com/fullon-labs/flon.cdt/${CDT_BRANCH}/CMakeLists.txt" "$CDT_VERSION"
     fi
 
     if [ "$BUILD_SCAN" = true ]; then
