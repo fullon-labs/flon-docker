@@ -56,7 +56,7 @@ function mreg() {
 
   local auth="$input"
   
-  if [[ "$input" =~ ^F[A-Z0-9]{50,}$ ]]; then
+  if [[ "$input" =~ ^F[A-Za-z0-9]{50,}$ ]]; then
     # 是公钥（如 FLON6...），保持原样
     :
   elif [[ "$input" =~ ^[a-z1-5.]{1,12}@(owner|active|code|[a-z1-5]{1,12})$ ]]; then

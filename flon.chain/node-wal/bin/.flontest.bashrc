@@ -69,7 +69,7 @@ function treg() {
   if [[ -z "$auth" ]]; then
     # 为空，使用默认公钥
     auth="FU6Dm6xR3JxpeEhdswTV4qTawYXjBcV4gtWjRPELaS9wbQzNmSUC"
-  elif [[ "$auth" =~ ^F[A-Z0-9]{50,}$ ]]; then
+  elif [[ "$auth" =~ ^F[A-Za-z0-9]{50,}$ ]]; then
     # 是 FLON 公钥格式，直接使用
     :
   elif [[ "$auth" =~ ^[a-z1-5.]{1,12}@[a-z]{1,12}$ ]]; then
