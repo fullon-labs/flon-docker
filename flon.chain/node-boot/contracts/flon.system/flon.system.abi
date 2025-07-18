@@ -3,6 +3,10 @@
     "version": "flon::abi/1.2",
     "types": [
         {
+            "new_type_name": "block_signing_authority",
+            "type": "variant_block_signing_authority_v0"
+        },
+        {
             "new_type_name": "blockchain_parameters_t",
             "type": "blockchain_parameters_v1"
         }
@@ -107,6 +111,20 @@
                 {
                     "name": "block_timestamp",
                     "type": "time_point"
+                }
+            ]
+        },
+        {
+            "name": "block_signing_authority_v0",
+            "base": "",
+            "fields": [
+                {
+                    "name": "threshold",
+                    "type": "uint32"
+                },
+                {
+                    "name": "keys",
+                    "type": "key_weight[]"
                 }
             ]
         },
@@ -497,6 +515,20 @@
             ]
         },
         {
+            "name": "producer_authority",
+            "base": "",
+            "fields": [
+                {
+                    "name": "producer_name",
+                    "type": "name"
+                },
+                {
+                    "name": "authority",
+                    "type": "block_signing_authority"
+                }
+            ]
+        },
+        {
             "name": "producer_key",
             "base": "",
             "fields": [
@@ -521,6 +553,16 @@
                 {
                     "name": "producers",
                     "type": "producer_key[]"
+                }
+            ]
+        },
+        {
+            "name": "producing_config",
+            "base": "",
+            "fields": [
+                {
+                    "name": "idle_block_interval_ms",
+                    "type": "uint64"
                 }
             ]
         },
@@ -607,6 +649,26 @@
                 {
                     "name": "is_priv",
                     "type": "uint8"
+                }
+            ]
+        },
+        {
+            "name": "setprodconf",
+            "base": "",
+            "fields": [
+                {
+                    "name": "idle_block_interval_ms",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "setprods",
+            "base": "",
+            "fields": [
+                {
+                    "name": "schedule",
+                    "type": "producer_authority[]"
                 }
             ]
         },
@@ -699,11 +761,6 @@
                     "type": "name"
                 }
             ]
-        },
-        {
-            "name": "version",
-            "base": "",
-            "fields": []
         },
         {
             "name": "limit_auth_change",
@@ -815,6 +872,16 @@
             "ricardian_contract": "---\nspec_version: \"0.2.0\"\ntitle: Make an Account Privileged or Unprivileged\nsummary: '{{#if is_priv}}Make {{nowrap account}} privileged{{else}}Remove privileged status of {{nowrap account}}{{/if}}'\nicon: https://raw.githubusercontent.com/eosnetworkfoundation/eos-system-contracts/main/contracts/icons/admin.png#9bf1cec664863bd6aaac0f814b235f8799fb02c850e9aa5da34e8a004bd6518e\n---\n\n{{#if is_priv}}\n{{$action.account}} makes {{account}} privileged.\n{{else}}\n{{$action.account}} removes privileged status of {{account}}.\n{{/if}}"
         },
         {
+            "name": "setprodconf",
+            "type": "setprodconf",
+            "ricardian_contract": "---\nspec_version: \"0.2.0\"\ntitle: Set producing configuration\nsummary: '{{nowrap producer}} sets the producing configuration'\nicon: https://raw.githubusercontent.com/eosnetworkfoundation/eos-system-contracts/main/contracts/icons/admin.png#9bf1cec664863bd6aaac0f814b235f8799fb02c850e9aa5da34e8a004bd6518e\n---\n\nSet the producing configuration. The configuration includes parameters such as the idle block interval and other production-related settings."
+        },
+        {
+            "name": "setprods",
+            "type": "setprods",
+            "ricardian_contract": ""
+        },
+        {
             "name": "unlinkauth",
             "type": "unlinkauth",
             "ricardian_contract": "---\nspec_version: \"0.2.0\"\ntitle: Unlink Action from Permission\nsummary: '{{nowrap account}} unsets the minimum required permission for the {{#if type}}{{nowrap type}} action of the{{/if}} {{nowrap code}} contract'\nicon: https://raw.githubusercontent.com/eosnetworkfoundation/eos-system-contracts/main/contracts/icons/account.png#3d55a2fc3a5c20b456f5657faf666bc25ffd06f4836c5e8256f741149b0b294f\n---\n\n{{account}} removes the association between the {{#if type}}{{type}} action of the{{/if}} {{code}} contract and its minimum required permission.\n\n{{#if type}}{{else}}This will not remove any links explicitly associated to specific actions of {{code}}.{{/if}}"
@@ -827,11 +894,6 @@
         {
             "name": "wasmcfg",
             "type": "wasmcfg",
-            "ricardian_contract": ""
-        },
-        {
-            "name": "version",
-            "type": "version",
             "ricardian_contract": ""
         }
     ],
@@ -853,6 +915,13 @@
         {
             "name": "global",
             "type": "eosio_global_state",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "prodconf",
+            "type": "producing_config",
             "index_type": "i64",
             "key_names": [],
             "key_types": []
@@ -882,11 +951,11 @@
             "body": "I, {{producer}}, hereby nominate myself for consideration as an elected block producer.\n\nAdditional conditions for block producer agreement can go here."
         }
     ],
-    "variants": [],
-    "action_results": [
+    "variants": [
         {
-            "name": "version",
-            "result_type": "string"
+            "name": "variant_block_signing_authority_v0",
+            "types": ["block_signing_authority_v0"]
         }
-    ]
+    ],
+    "action_results": []
 }

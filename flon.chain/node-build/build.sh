@@ -5,7 +5,7 @@ fi
 # Default values for build parameters
 DOCKER_IMG=${DOCKER_IMG:-"floncore/funod"}
 FULLON_VERSION=${FULLON_VERSION:-"0.5.0-alpha"}
-BRANCH=${FLON_BRANCH:-"main"}
+BRANCH=${FULLON_BRANCH:-"main"}
 LOCAL_PATH=${LOCAL_PATH:-"../../"}
 REPO=${REPO:-"https://github.com/fullon-labs/flon-core.git"}
 MODE=${MODE:-"git"}
