@@ -1,0 +1,23 @@
+# Dockerfile.base
+FROM ubuntu:22.04 AS base-builder
+SHELL ["/bin/bash", "-c"]
+
+# 更换国内源
+RUN echo "deb http://mirrors.aliyun.com/ubuntu/ jammy main restricted universe multiverse" > /etc/apt/sources.list && \
+    echo "deb http://mirrors.aliyun.com/ubuntu/ jammy-updates main restricted universe multiverse" >> /etc/apt/sources.list && \
+    echo "deb http://mirrors.aliyun.com/ubuntu/ jammy-backports main restricted universe multiverse" >> /etc/apt/sources.list && \
+    echo "deb http://mirrors.aliyun.com/ubuntu/ jammy-security main restricted universe multiverse" >> /etc/apt/sources.list 
+
+# 安装构建通用依赖
+RUN apt-get update && apt-get install -y \
+    git \
+    sudo \
+    build-essential \
+    cmake \
+    libcurl4-openssl-dev \
+    libgmp-dev \
+    llvm-11-dev \
+    python3-numpy \
+    file \
+    zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/*
