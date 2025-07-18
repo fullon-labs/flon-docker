@@ -1,0 +1,6 @@
+# Dockerfile.runtime
+FROM history-tools/runtime-base
+
+COPY fill-pg /usr/local/bin/fill-pg
+
+CMD ["fill-pg"]

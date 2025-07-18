@@ -1,0 +1,19 @@
+# Dockerfile.runtime.base
+FROM ubuntu:22.04
+SHELL ["/bin/bash", "-c"]
+
+RUN echo "Asia/Shanghai" > /etc/timezone && \
+    ln -fs /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+
+RUN echo "deb http://mirrors.aliyun.com/ubuntu/ jammy main restricted universe multiverse" > /etc/apt/sources.list && \
+    echo "deb http://mirrors.aliyun.com/ubuntu/ jammy-updates main restricted universe multiverse" >> /etc/apt/sources.list && \
+    echo "deb http://mirrors.aliyun.com/ubuntu/ jammy-backports main restricted universe multiverse" >> /etc/apt/sources.list && \
+    echo "deb http://mirrors.aliyun.com/ubuntu/ jammy-security main restricted universe multiverse" >> /etc/apt/sources.list
+
+# 安装运行期依赖
+RUN apt-get update && apt-get install -y \
+    netcat \
+    openssl \
+    postgresql-client \
+    gcc-10 g++-10 \
+    && apt-get clean && rm -rf /var/cache/apt/lists/*

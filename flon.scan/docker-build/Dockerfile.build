@@ -1,0 +1,16 @@
+# Dockerfile.build
+FROM history-tools/base-builder as builder
+SHELL ["/bin/bash", "-c"]
+
+ARG BRANCH
+ARG REPO
+ARG CMAKE_BUILD_TYPE=Release
+
+# 拉取源码
+RUN git clone --recursive "$REPO" -b "$BRANCH" /root/history-tools
+
+WORKDIR /root/history-tools/build
+
+# 构建
+RUN cmake -GNinja -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE -DPostgreSQL_TYPE_INCLUDE_DIR=/usr/include/postgresql .. && \
+    ninja
