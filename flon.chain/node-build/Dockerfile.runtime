@@ -1,0 +1,12 @@
+# Dockerfile.runtime
+FROM fullon/runtime-base
+
+COPY fullon.install.deb /fullon.install.deb
+
+RUN apt-get update && \
+    apt-get install -y /fullon.install.deb && \
+    rm -f /fullon.install.deb && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /opt/fullon
+CMD ["bash"]

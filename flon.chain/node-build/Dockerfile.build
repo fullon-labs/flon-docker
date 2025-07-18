@@ -1,0 +1,28 @@
+# Dockerfile.build
+FROM fullon/base:builder AS builder
+SHELL ["/bin/bash", "-c"]
+
+ARG BRANCH
+ARG REPO
+ARG MODE
+ARG LOCAL_PATH
+ARG FULLON_VERSION
+ARG CMAKE_BUILD_TYPE=Release
+
+WORKDIR /fullon
+
+RUN if [ "$MODE" = "local" ]; then \
+        echo "Building in local data mode"; \
+        cp -r ${LOCAL_PATH}/* /fullon; \
+    else \
+        echo "Building in git clone mode"; \
+        git clone --recursive "$REPO" -b "$BRANCH" .; \
+    fi
+
+RUN cat ./CMakeLists.txt
+
+RUN mkdir -p build && cd build && \
+    cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_PREFIX_PATH=/usr/lib/llvm-11 .. && \
+    make -j"$(nproc)" package
+
+RUN cp "$(ls -t /fullon/build/flon-core_*-ubuntu22.04_amd64.deb | head -n 1)" /fullon.install.deb
