@@ -23,16 +23,14 @@ LOCAL_DIR="${LOCAL_DIR:-${WORKDIR}/snapshot_${TS}}"
 ENABLE_ZSTD="${ENABLE_ZSTD:-1}"
 
 # OSS 参数（使用 ossutil）
-OSS_ENDPOINT="${OSS_ENDPOINT:-oss-cn-hongkong.aliyuncs.com}"   # 例：oss-cn-hongkong.aliyuncs.com
-OSS_BUCKET="${OSS_BUCKET:-flon-test}"                          # 例：你的 bucket 名
-OSS_PREFIX="${OSS_PREFIX:-snapshots}"                          # 例：上传到 bucket/snapshots/ 下
+OSS_ENDPOINT="${ALI_OSS_ENDPOINT:-oss-cn-hongkong.aliyuncs.com}"   # 例：oss-cn-hongkong.aliyuncs.com
+OSS_BUCKET="${ALI_OSS_BUCKET:-flon-test}"                          # 例：你的 bucket 名
+OSS_PREFIX="${ALI_OSS_PREFIX:-snapshots}"                          # 例：上传到 bucket/snapshots/ 下
 
 # 认证（任选其一）
 # 方式A：使用环境变量传密钥
-OSS_ACCESS_KEY_ID="${OSS_ACCESS_KEY_ID:-}"
-OSS_ACCESS_KEY_SECRET="${OSS_ACCESS_KEY_SECRET:-}"
-OSS_STS_TOKEN="${OSS_STS_TOKEN:-}"  # 可选
-# 方式B：已通过 'ossutil config' 写到 ~/.ossutilconfig，则可不填上面三项
+OSS_ACCESS_KEY_ID="${ALI_OSS_ACCESS_KEY:-}"
+OSS_ACCESS_KEY_SECRET="${ALI_OSS_ACCESS_SECRET:-}"
 
 ### ======= 工具探测 =======
 need(){ command -v "$1" >/dev/null 2>&1 || { echo "Need command: $1" >&2; exit 1; }; }
