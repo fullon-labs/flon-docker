@@ -1,0 +1,162 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "flon-node.fullname" . }}
+  labels:
+    {{- include "flon-node.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "flon-node.fullname" . }}-headless
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "flon-node.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        {{- include "flon-node.labels" . | nindent 8 }}
+      annotations:
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+        runAsNonRoot: true
+      containers:
+        - name: nodflon
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - nodflon
+            - --data-dir=/data
+            - --config-dir=/config
+            {{- if .Values.genesis.enabled }}
+            - --genesis-json=/config/genesis.json
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.httpPort }}
+            - name: p2p
+              containerPort: {{ .Values.service.p2pPort }}
+          env:
+            {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+            - name: SNAPSHOT_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "flon-node.fullname" . }}-snapshot
+                  key: snapshot_url
+                  optional: true
+          readinessProbe:
+            httpGet:
+              path: /v1/chain/get_info
+              port: {{ .Values.service.httpPort }}
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  last=$(curl -s http://127.0.0.1:{{ .Values.service.httpPort }}/v1/chain/get_info | grep head_block_time | sed 's/.*"head_block_time":"\([^" ]*\)".*/\1/')
+                  [ -z "$last" ] && exit 1
+                  now=$(date -u +%s)
+                  ts=$(date -u -d "$last" +%s 2>/dev/null || date -u -j -f "%Y-%m-%dT%H:%M:%S.%NZ" "$last" +%s)
+                  [ $((now - ts)) -lt {{ .Values.livenessProbe.maxBehindSeconds }} ]
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: config
+              mountPath: /config
+            {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+
+      initContainers:
+        - name: prepare-config
+          image: alpine:3.20
+          command: ["/bin/sh","-c"]
+          args:
+            - |
+              set -e
+              mkdir -p /config
+              cp /cm/config.ini /config/config.ini
+              {{- if .Values.genesis.enabled }}
+              cp /cm/genesis.json /config/genesis.json
+              {{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: cm
+              mountPath: /cm
+
+        - name: fetch-snapshot
+          {{- if .Values.snapshot.enabled }}
+          image: ghcr.io/stonedreams/zstd:latest
+          {{- else }}
+          image: alpine:3.20
+          {{- end }}
+          command: ["/bin/sh","-c"]
+          args:
+            - |
+              set -e
+              if [ -n "$SNAPSHOT_URL" ] && [ ! -f /data/snapshot.bin ]; then
+                echo "Downloading snapshot..."
+                case "$SNAPSHOT_URL" in
+                  *.zst) apk add --no-cache curl zstd >/dev/null 2>&1 || true; curl -L "$SNAPSHOT_URL" -o /data/snapshot.bin.zst && zstd -d /data/snapshot.bin.zst -o /data/snapshot.bin ;;
+                  *)     apk add --no-cache curl >/dev/null 2>&1 || true; curl -L "$SNAPSHOT_URL" -o /data/snapshot.bin ;;
+                esac
+              fi
+          env:
+            - name: SNAPSHOT_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "flon-node.fullname" . }}-snapshot
+                  key: snapshot_url
+                  optional: true
+          volumeMounts:
+            - name: data
+              mountPath: /data
+
+      volumes:
+        - name: cm
+          configMap:
+            name: {{ include "flon-node.fullname" . }}-config
+        - name: config
+          emptyDir: {}
+        {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: {{ toYaml .Values.persistence.accessModes | nindent 10 }}
+        storageClassName: {{ .Values.persistence.storageClassName | quote }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size }}

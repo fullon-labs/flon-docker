@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "flon-node.fullname" . }}-config
+  labels:
+    {{- include "flon-node.labels" . | nindent 4 }}
+
+data:
+  config.ini: |
+    blocks-dir = /data/blocks
+    chain-state-db-size-mb = {{ .Values.chain.chainStateDbSizeMB }}
+    reversible-blocks-db-size-mb = {{ .Values.chain.reversibleDbSizeMB }}
+    http-server-address = 0.0.0.0:{{ .Values.service.httpPort }}
+    p2p-listen-endpoint = 0.0.0.0:{{ .Values.service.p2pPort }}
+    p2p-max-nodes-per-host = {{ .Values.chain.p2pMaxNodesPerHost }}
+    access-control-allow-origin = {{ .Values.chain.accessControlAllowOrigin }}
+    http-validate-host = {{ .Values.chain.httpValidateHost }}
+    abi-serializer-max-time-ms = {{ .Values.chain.abiSerializerMaxTimeMs }}
+    net-threads = {{ .Values.chain.netThreads }}
+    sync-fetch-span = {{ .Values.chain.syncFetchSpan }}
+    read-mode = {{ .Values.chain.readMode }}
+    max-transaction-time = {{ .Values.chain.maxTransactionTime }}
+    reversible-blocks-db-guard-size-mb = 128
+    chain-threads = {{ .Values.chain.chainThreads }}
+    http-threads = {{ .Values.chain.httpThreads }}
+    plugin = flonio::chain_plugin
+    plugin = flonio::chain_api_plugin
+    plugin = flonio::net_plugin
+    plugin = flonio::net_api_plugin
+    plugin = flonio::producer_api_plugin
+    {{- if .Values.producer.enabled }}
+    plugin = flonio::producer_plugin
+    producer-name = {{ .Values.producer.name | quote }}
+    signature-provider = {{ .Values.producer.signatureProvider | quote }}
+    {{- end }}
+
+    {{- range $p := .Values.peers }}
+    p2p-peer-address = {{ $p }}
+    {{- end }}
+
+  {{- if .Values.genesis.enabled }}
+  genesis.json: |
+{{ .Values.genesis.content | indent 4 }}
+  {{- end }}
