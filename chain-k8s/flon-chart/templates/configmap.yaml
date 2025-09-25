@@ -8,6 +8,7 @@ metadata:
 data:
   config.ini: |
     blocks-dir = /data/blocks
+    contracts-console = true
     chain-state-db-size-mb = {{ .Values.chain.chainStateDbSizeMB }}
     reversible-blocks-db-size-mb = {{ .Values.chain.reversibleDbSizeMB }}
     http-server-address = 0.0.0.0:{{ .Values.service.httpPort }}
