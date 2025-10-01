@@ -57,8 +57,8 @@ chain:
   httpValidateHost: false
 
 # peers 列表（p2p-peer-address）
-peers: []
-   - hk-t1.vm.nestar.vip:19806
+peers:
+  - hk-t1.vm.nestar.vip:19806
 #  - peer1.flon.example.com:9876
 #  - peer2.flon.example.com:9876
 
