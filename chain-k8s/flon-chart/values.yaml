@@ -3,16 +3,16 @@ image:
   tag: 0.6.4
   pullPolicy: IfNotPresent
 
-replicaCount: 1  # 单节点；如需水平扩，建议配多数据副本并注意 P2P 配置
+replicaCount: 1  # 优化成本，单节点运行
 
 service:
-  type: ClusterIP
+  type: NodePort
   httpPort: 8888
   p2pPort: 9876
   annotations: {}
 
 ingress:
-  enabled: false
+  enabled: true
   className: "nginx"
   annotations: {}
   hosts:
@@ -23,18 +23,15 @@ ingress:
   tls: []
 
 persistence:
-  enabled: true
-  storageClassName: fast-ssd
-  accessModes: ["ReadWriteOnce"]
-  size: 100Gi
+  enabled: false
 
 resources:
   requests:
-    cpu: "2"
-    memory: "4Gi"
+    cpu: "200m"
+    memory: "512Mi"
   limits:
-    cpu: "8"
-    memory: "16Gi"
+    cpu: "800m"
+    memory: "2Gi"
 
 nodeSelector: {}
 
@@ -64,7 +61,7 @@ peers:
 
 # genesis.json 内容：默认仅占位，主网通常不需要这里（已有链数据/快照）。
 genesis:
-  enabled: true
+  enabled: false
   content: |
     {
       "initial_timestamp": "2025-01-01T08:00:00.000",
@@ -92,7 +89,7 @@ genesis:
 
 # 从快照启动（可选）
 snapshot:
-  enabled: false
+  enabled: true
   # 支持 .bin 或 .zst
   url: "https://flon-test.oss-cn-hongkong.aliyuncs.com/snapshots/snapshot-0112e5a55036637fa05a3ccf3dde370816b216092d87b9b2626f9f0cc0e77e17.bin"
 
@@ -108,7 +105,7 @@ readinessProbe:
   timeoutSeconds: 3
 
 livenessProbe:
-  initialDelaySeconds: 90
+  initialDelaySeconds: 300
   periodSeconds: 20
   timeoutSeconds: 5
   # 与 head_block_time 的最大滞后（秒）

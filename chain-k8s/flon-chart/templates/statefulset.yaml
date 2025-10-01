@@ -45,7 +45,9 @@ spec:
             - funod
             - --data-dir=/data
             - --config-dir=/config
-            {{- if .Values.genesis.enabled }}
+            {{- if .Values.snapshot.enabled }}
+            - --snapshot=/data/snapshot.bin
+            {{- else if .Values.genesis.enabled }}
             - --genesis-json=/config/genesis.json
             {{- end }}
           ports:
@@ -115,7 +117,7 @@ spec:
 
         - name: fetch-snapshot
           {{- if .Values.snapshot.enabled }}
-          image: ghcr.io/stonedreams/zstd:latest
+          image: curlimages/curl:latest
           {{- else }}
           image: alpine:3.20
           {{- end }}
@@ -125,10 +127,8 @@ spec:
               set -e
               if [ -n "$SNAPSHOT_URL" ] && [ ! -f /data/snapshot.bin ]; then
                 echo "Downloading snapshot..."
-                case "$SNAPSHOT_URL" in
-                  *.zst) apk add --no-cache curl zstd >/dev/null 2>&1 || true; curl -L "$SNAPSHOT_URL" -o /data/snapshot.bin.zst && zstd -d /data/snapshot.bin.zst -o /data/snapshot.bin ;;
-                  *)     apk add --no-cache curl >/dev/null 2>&1 || true; curl -L "$SNAPSHOT_URL" -o /data/snapshot.bin ;;
-                esac
+                curl -L "$SNAPSHOT_URL" -o /data/snapshot.bin
+                echo "Snapshot downloaded successfully"
               fi
           env:
             - name: SNAPSHOT_URL
