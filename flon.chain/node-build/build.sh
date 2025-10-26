@@ -2,13 +2,13 @@
 set -e
 
 # === 加载环境变量 ===
-if [ -f ~/flon.env ]; then
-  source ~/flon.env
+if [ -f ./.flon.env ]; then
+  source ./.flon.env
 fi
 
 # === 默认变量 ===
 DOCKER_IMG=${DOCKER_IMG:-"floncore/funod"}
-FULLON_VERSION=${FULLON_VERSION:-"0.5.0-alpha"}
+FULLON_VERSION=${FULLON_VERSION:-"0.6.5"}
 BRANCH=${FULLON_BRANCH:-"main"}
 REPO=${REPO:-"https://github.com/fullon-labs/flon-core.git"}
 MODE=${MODE:-"git"}
