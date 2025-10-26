@@ -2,8 +2,8 @@
 set -e
 
 # === 加载环境变量 ===
-if [ -f ./.flon.env ]; then
-  source ./.flon.env
+if [ -f ~/.flon.env ]; then
+  source ~/.flon.env
 fi
 
 # === 默认变量 ===

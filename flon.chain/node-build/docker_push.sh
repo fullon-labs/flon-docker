@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Load variables from the .env.upload file
-if [ -f ~/flon.env ]; then
-  source ~/flon.env
+if [ -f ~/.flon.env ]; then
+  source ~/.flon.env
 else 
-  echo "Error: ~/flon.env file not found!"
+  echo "Error: ~/.flon.env file not found!"
   exit 1
 fi
 IMAGE_NAME="floncore/funod"
