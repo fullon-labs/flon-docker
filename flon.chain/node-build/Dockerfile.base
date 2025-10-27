@@ -20,4 +20,5 @@ RUN apt-get update && apt-get install -y \
     python3-numpy \
     file \
     zlib1g-dev \
+    librocksdb-dev \
     && rm -rf /var/lib/apt/lists/*

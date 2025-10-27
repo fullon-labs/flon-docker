@@ -26,6 +26,7 @@ RUN apt-get update && apt-get install -y \
     llvm-11-dev \
     python3-numpy \
     file \
+    librocksdb-dev \
     zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 
@@ -64,7 +65,8 @@ RUN echo "deb http://mirrors.aliyun.com/ubuntu/ jammy main restricted universe m
 RUN apt-get update --fix-missing && apt-get upgrade -y && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
     libusb-1.0-0 \
-    libcurl3-gnutls \
+    libcurl3-gnutls \ 
+    librocksdb-dev \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install Fullon
