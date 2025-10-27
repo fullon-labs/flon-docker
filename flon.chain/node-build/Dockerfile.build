@@ -8,6 +8,7 @@ ARG MODE
 ARG LOCAL_PATH
 ARG FULLON_VERSION
 ARG CMAKE_BUILD_TYPE=Release
+ARG NPROC=6
 
 WORKDIR /fullon
 
@@ -23,6 +24,6 @@ RUN cat ./CMakeLists.txt
 
 RUN mkdir -p build && cd build && \
     cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_PREFIX_PATH=/usr/lib/llvm-11 .. && \
-    make -j"$(nproc)" package
+    make -j $NPROC package
 
 RUN cp "$(ls -t /fullon/build/flon-core_*-ubuntu22.04_amd64.deb | head -n 1)" /fullon.install.deb
