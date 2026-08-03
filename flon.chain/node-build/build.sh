@@ -2,7 +2,10 @@
 set -e
 
 # === 加载环境变量 ===
-if [ -f ~/.flon.env ]; then
+# CI must supply its inputs explicitly so a user's home directory cannot
+# silently change the branch or image version being built.
+FLON_LOAD_USER_ENV=${FLON_LOAD_USER_ENV:-"true"}
+if [ "${FLON_LOAD_USER_ENV}" = "true" ] && [ -f ~/.flon.env ]; then
   source ~/.flon.env
 fi
 
@@ -47,21 +50,21 @@ fi
 # === Step 1: 编译 .deb 包 ===
 echo "[1/4] Building .deb package using Dockerfile.build..."
 docker build -f Dockerfile.build -t fullon/builder \
-  --build-arg BRANCH=${BRANCH} \
-  --build-arg REPO=${REPO} \
-  --build-arg MODE=${MODE} \
-  --build-arg LOCAL_PATH=${LOCAL_PATH} \
-  --build-arg FULLON_VERSION=${FULLON_VERSION} .
+  --build-arg "BRANCH=${BRANCH}" \
+  --build-arg "REPO=${REPO}" \
+  --build-arg "MODE=${MODE}" \
+  --build-arg "LOCAL_PATH=${LOCAL_PATH}" \
+  --build-arg "FULLON_VERSION=${FULLON_VERSION}" .
 
 # === Step 2: 提取 .deb 包 ===
 echo "[2/4] Exporting .deb from builder..."
 CONTAINER_ID=$(docker create fullon/builder)
-docker cp ${CONTAINER_ID}:/fullon.install.deb ./fullon.install.deb
-docker rm ${CONTAINER_ID}
+docker cp "${CONTAINER_ID}:/fullon.install.deb" ./fullon.install.deb
+docker rm "${CONTAINER_ID}"
 
 # === Step 3: 构建最终运行镜像 ===
 echo "[3/4] Building final runtime image..."
-docker build -f Dockerfile.runtime -t ${NODE_IMG_HEADER}${DOCKER_IMG}:${FULLON_VERSION} .
+docker build -f Dockerfile.runtime -t "${NODE_IMG_HEADER}${DOCKER_IMG}:${FULLON_VERSION}" .
 
 # 清理临时 .deb 文件
 rm -f ./fullon.install.deb
