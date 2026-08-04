@@ -15,7 +15,7 @@ pipeline {
         string(
             name: 'FULLON_REF',
             defaultValue: 'develop',
-            description: 'flon-core branch or tag to compile (for example: develop or v0.6.6)',
+            description: 'flon-core branch or commit to compile (for example: develop or a commit SHA)',
             trim: true
         )
     }
@@ -51,7 +51,7 @@ pipeline {
 
                     echo "Source ref: ${env.FULLON_BRANCH}"
                     echo "Local output image: ${env.OUTPUT_IMAGE}"
-                    echo 'Build-only policy: registry login and image push are disabled.'
+                    echo 'Build-only policy: registry credentials, login, and image push are disabled.'
                 }
             }
         }

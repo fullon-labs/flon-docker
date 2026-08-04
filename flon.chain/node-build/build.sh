@@ -17,6 +17,7 @@ REPO=${REPO:-"https://github.com/fullon-labs/flon-core.git"}
 MODE=${MODE:-"git"}
 LOCAL_PATH=${LOCAL_PATH:-"../../"}
 NODE_IMG_HEADER=${NODE_IMG_HEADER:-""}
+EXPORT_DEB=${EXPORT_DEB:-"false"}
 BUILDER_BASE_IMG="fullon/base:builder"
 RUNTIME_BASE_IMG="fullon/runtime-base"
 
@@ -61,6 +62,12 @@ echo "[2/4] Exporting .deb from builder..."
 CONTAINER_ID=$(docker create fullon/builder)
 docker cp "${CONTAINER_ID}:/fullon.install.deb" ./fullon.install.deb
 docker rm "${CONTAINER_ID}"
+
+if [ "${EXPORT_DEB}" = "true" ]; then
+  EXPORTED_DEB="flon-core_${FULLON_VERSION}_amd64.deb"
+  cp ./fullon.install.deb "./${EXPORTED_DEB}"
+  echo "Exported package: ${EXPORTED_DEB}"
+fi
 
 # === Step 3: 构建最终运行镜像 ===
 echo "[3/4] Building final runtime image..."

@@ -1,0 +1,114 @@
+pipeline {
+    agent {
+        label 'a3'
+    }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '20'))
+        disableConcurrentBuilds()
+        skipDefaultCheckout(true)
+        timestamps()
+        timeout(time: 120, unit: 'MINUTES')
+    }
+
+    parameters {
+        string(
+            name: 'RELEASE_TAG',
+            defaultValue: '',
+            description: 'Existing flon-core release tag to build and publish (for example: v0.6.6)',
+            trim: true
+        )
+    }
+
+    environment {
+        DOCKER_IMG = 'floncore/funod'
+        FLON_LOAD_USER_ENV = 'false'
+        MODE = 'git'
+        NODE_IMG_HEADER = 'ghcr.io/fullon-labs/'
+        REPO = 'https://github.com/fullon-labs/flon-core.git'
+    }
+
+    stages {
+        stage('Checkout build tools') {
+            steps {
+                git branch: 'main', url: 'https://github.com/fullon-labs/flon-docker.git'
+            }
+        }
+
+        stage('Validate release tag') {
+            steps {
+                script {
+                    def releaseTag = params.RELEASE_TAG?.trim()
+
+                    if (!releaseTag || !(releaseTag ==~ /v?[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z][0-9A-Za-z.-]*)?/)) {
+                        error("Invalid RELEASE_TAG: ${releaseTag}. Expected a tag such as v0.6.6 or v0.6.6-rc.1")
+                    }
+
+                    env.FULLON_BRANCH = releaseTag
+                    env.FULLON_VERSION = releaseTag
+                    env.OUTPUT_IMAGE = "${env.NODE_IMG_HEADER}${env.DOCKER_IMG}:${releaseTag}"
+                    env.DEB_ARTIFACT = "flon.chain/node-build/flon-core_${releaseTag}_amd64.deb"
+                    currentBuild.description = "${releaseTag} -> ${env.OUTPUT_IMAGE}"
+                }
+
+                sh '''
+                    set -eu
+                    git ls-remote --exit-code --tags "${REPO}" "refs/tags/${FULLON_BRANCH}" >/dev/null
+                    echo "Verified release tag: ${FULLON_BRANCH}"
+                    echo "Release image: ${OUTPUT_IMAGE}"
+                '''
+            }
+        }
+
+        stage('Compile flon-core release') {
+            steps {
+                dir('flon.chain/node-build') {
+                    sh '''
+                        set -eu
+                        mkdir -p "${WORKSPACE}/.jenkins-home"
+                        EXPORT_DEB=true HOME="${WORKSPACE}/.jenkins-home" ./build.sh
+                        docker image inspect "${OUTPUT_IMAGE}" >/dev/null
+                    '''
+                }
+            }
+        }
+
+        stage('Archive Debian package') {
+            steps {
+                archiveArtifacts artifacts: "${env.DEB_ARTIFACT}", fingerprint: true, onlyIfSuccessful: true
+            }
+        }
+
+        stage('Publish tagged image') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'ghcr-fullon-labs',
+                        usernameVariable: 'GHCR_USERNAME',
+                        passwordVariable: 'GHCR_TOKEN'
+                    )
+                ]) {
+                    sh '''
+                        set -eu
+                        set +x
+                        printf '%s' "${GHCR_TOKEN}" | docker login ghcr.io --username "${GHCR_USERNAME}" --password-stdin
+                        trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
+                        docker push "${OUTPUT_IMAGE}"
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Release completed: ${env.OUTPUT_IMAGE}"
+        }
+        failure {
+            echo 'Release failed. Check tag validation, compilation, archived package, and registry publishing logs.'
+        }
+        cleanup {
+            sh 'docker logout ghcr.io >/dev/null 2>&1 || true'
+        }
+    }
+}
