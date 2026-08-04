@@ -60,6 +60,25 @@ pipeline {
             }
         }
 
+        stage('Validate publish credentials') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'ghcr-fullon-labs',
+                        usernameVariable: 'GHCR_USERNAME',
+                        passwordVariable: 'GHCR_TOKEN'
+                    )
+                ]) {
+                    sh '''
+                        set +x
+                        test -n "${GHCR_USERNAME}"
+                        test -n "${GHCR_TOKEN}"
+                        echo 'GHCR publish credentials are available.'
+                    '''
+                }
+            }
+        }
+
         stage('Compile flon-core release') {
             steps {
                 dir('flon.chain/node-build') {
