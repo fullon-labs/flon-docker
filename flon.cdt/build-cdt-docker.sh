@@ -1,8 +1,10 @@
 #!/bin/bash
 set -e
 
-# 加载自定义环境变量
-if [ -f ~/flon.env ]; then
+# CI must supply release inputs explicitly so the build agent's user-level
+# flon.env cannot silently replace the requested tag or image version.
+FLON_LOAD_USER_ENV="${FLON_LOAD_USER_ENV:-true}"
+if [ "${FLON_LOAD_USER_ENV}" = "true" ] && [ -f ~/flon.env ]; then
   source ~/flon.env
 fi
 
