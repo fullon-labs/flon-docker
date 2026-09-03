@@ -1,0 +1,124 @@
+pipeline {
+    agent {
+        label 'a3'
+    }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '20'))
+        disableConcurrentBuilds()
+        skipDefaultCheckout(true)
+        timestamps()
+        timeout(time: 120, unit: 'MINUTES')
+    }
+
+    parameters {
+        string(
+            name: 'RELEASE_TAG',
+            defaultValue: '',
+            description: 'Existing history-tools release tag to build and publish (for example: v0.5.0)',
+            trim: true
+        )
+    }
+
+    environment {
+        HISTORY_IMAGE = 'floncore/history-tools'
+        FLON_LOAD_USER_ENV = 'false'
+        NODE_IMG_HEADER = 'ghcr.io/fullon-labs/'
+        REPO = 'https://github.com/fullon-labs/history-tools.git'
+    }
+
+    stages {
+        stage('Checkout build tools') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Validate release tag') {
+            steps {
+                script {
+                    def releaseTag = params.RELEASE_TAG?.trim()
+
+                    if (!releaseTag || !(releaseTag ==~ /v?[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z][0-9A-Za-z.-]*)?/)) {
+                        error("Invalid RELEASE_TAG: ${releaseTag}. Expected a tag such as v0.5.0 or v0.5.0-rc.1")
+                    }
+
+                    env.BRANCH = releaseTag
+                    env.HISTORY_VERSION = releaseTag
+                    env.OUTPUT_IMAGE = "${env.NODE_IMG_HEADER}${env.HISTORY_IMAGE}:${releaseTag}"
+                    currentBuild.description = "${releaseTag} -> ${env.OUTPUT_IMAGE}"
+                }
+
+                sh '''
+                    set -eu
+                    git ls-remote --exit-code --tags "${REPO}" "refs/tags/${BRANCH}" >/dev/null
+                    echo "Verified release tag: ${BRANCH}"
+                    echo "Release image: ${OUTPUT_IMAGE}"
+                '''
+            }
+        }
+
+        stage('Validate publish credentials') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'ghcr-fullon-labs',
+                        usernameVariable: 'GHCR_USERNAME',
+                        passwordVariable: 'GHCR_TOKEN'
+                    )
+                ]) {
+                    sh '''
+                        set +x
+                        test -n "${GHCR_USERNAME}"
+                        test -n "${GHCR_TOKEN}"
+                        echo 'GHCR publish credentials are available.'
+                    '''
+                }
+            }
+        }
+
+        stage('Compile history-tools release') {
+            steps {
+                dir('flon.scan/docker-build') {
+                    sh '''
+                        set -eu
+                        bash ./build.sh
+                        docker image inspect "${OUTPUT_IMAGE}" >/dev/null
+                    '''
+                }
+            }
+        }
+
+        stage('Publish tagged image') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'ghcr-fullon-labs',
+                        usernameVariable: 'GHCR_USERNAME',
+                        passwordVariable: 'GHCR_TOKEN'
+                    )
+                ]) {
+                    sh '''
+                        set -eu
+                        set +x
+                        printf '%s' "${GHCR_TOKEN}" | docker login ghcr.io --username "${GHCR_USERNAME}" --password-stdin
+                        trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
+                        docker push "${OUTPUT_IMAGE}"
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Release completed: ${env.OUTPUT_IMAGE}"
+        }
+        failure {
+            echo 'Release failed. Check tag validation, compilation, and registry publishing logs.'
+        }
+        cleanup {
+            sh 'docker logout ghcr.io >/dev/null 2>&1 || true'
+        }
+    }
+}
