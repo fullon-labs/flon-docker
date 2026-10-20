@@ -18,8 +18,23 @@ MODE=${MODE:-"git"}
 LOCAL_PATH=${LOCAL_PATH:-"../../"}
 NODE_IMG_HEADER=${NODE_IMG_HEADER:-""}
 EXPORT_DEB=${EXPORT_DEB:-"false"}
+FLON_NODE_VARIANT=${FLON_NODE_VARIANT:-"core"}
 BUILDER_BASE_IMG="fullon/base:builder"
 RUNTIME_BASE_IMG="fullon/runtime-base"
+
+case "${FLON_NODE_VARIANT}" in
+  core)
+    DEB_NAME="flon-node"
+    ;;
+  history)
+    DEB_NAME="flon-node-history"
+    ;;
+  *)
+    echo "FLON_NODE_VARIANT must be core or history, got: ${FLON_NODE_VARIANT}" >&2
+    exit 1
+    ;;
+esac
+BUILDER_IMG="fullon/builder-${FLON_NODE_VARIANT}"
 
 SOURCE_REV="local"
 if [ "${MODE}" = "git" ]; then
@@ -43,6 +58,7 @@ echo " MODE             = ${MODE}"
 echo " LOCAL_PATH       = ${LOCAL_PATH}"
 echo " REPO             = ${REPO}"
 echo " SOURCE_REV       = ${SOURCE_REV}"
+echo " NODE_VARIANT     = ${FLON_NODE_VARIANT}"
 echo "======================================"
 
 # === Step 0-A: 构建 builder base 镜像 ===
@@ -63,22 +79,23 @@ fi
 
 # === Step 1: 编译 .deb 包 ===
 echo "[1/4] Building .deb package using Dockerfile.build..."
-docker build -f Dockerfile.build -t fullon/builder \
+docker build -f Dockerfile.build -t "${BUILDER_IMG}" \
   --build-arg "BRANCH=${BRANCH}" \
   --build-arg "REPO=${REPO}" \
   --build-arg "MODE=${MODE}" \
   --build-arg "LOCAL_PATH=${LOCAL_PATH}" \
   --build-arg "FULLON_VERSION=${FULLON_VERSION}" \
-  --build-arg "SOURCE_REV=${SOURCE_REV}" .
+  --build-arg "SOURCE_REV=${SOURCE_REV}" \
+  --build-arg "FLON_NODE_VARIANT=${FLON_NODE_VARIANT}" .
 
 # === Step 2: 提取 .deb 包 ===
 echo "[2/4] Exporting .deb from builder..."
-CONTAINER_ID=$(docker create fullon/builder)
+CONTAINER_ID=$(docker create "${BUILDER_IMG}")
 docker cp "${CONTAINER_ID}:/fullon.install.deb" ./fullon.install.deb
 docker rm "${CONTAINER_ID}"
 
 if [ "${EXPORT_DEB}" = "true" ]; then
-  EXPORTED_DEB="flon-core_${FULLON_VERSION}_amd64.deb"
+  EXPORTED_DEB="${DEB_NAME}_${FULLON_VERSION}_amd64.deb"
   cp ./fullon.install.deb "./${EXPORTED_DEB}"
   echo "Exported package: ${EXPORTED_DEB}"
 fi

@@ -25,8 +25,11 @@ RUN if [ "$MODE" = "local" ]; then \
 
 RUN cat ./CMakeLists.txt
 
+ARG FLON_NODE_VARIANT=core
 RUN mkdir -p build && cd build && \
-    cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_PREFIX_PATH=/usr/lib/llvm-11 .. && \
+    cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
+      -DCMAKE_PREFIX_PATH=/usr/lib/llvm-11 \
+      -DFLON_NODE_VARIANT=${FLON_NODE_VARIANT} .. && \
     make -j $NPROC package
 
-RUN cp "$(ls -t /fullon/build/flon-core_*-ubuntu22.04_amd64.deb | head -n 1)" /fullon.install.deb
+RUN cp "$(ls -t /fullon/build/flon-core-node_*-ubuntu22.04_amd64.deb | head -n 1)" /fullon.install.deb

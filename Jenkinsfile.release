@@ -21,7 +21,6 @@ pipeline {
     }
 
     environment {
-        DOCKER_IMG = 'floncore/funod'
         FLON_LOAD_USER_ENV = 'false'
         MODE = 'git'
         NODE_IMG_HEADER = 'ghcr.io/fullon-labs/'
@@ -46,16 +45,17 @@ pipeline {
 
                     env.FULLON_BRANCH = releaseTag
                     env.FULLON_VERSION = releaseTag
-                    env.OUTPUT_IMAGE = "${env.NODE_IMG_HEADER}${env.DOCKER_IMG}:${releaseTag}"
-                    env.DEB_ARTIFACT = "flon.chain/node-build/flon-core_${releaseTag}_amd64.deb"
-                    currentBuild.description = "${releaseTag} -> ${env.OUTPUT_IMAGE}"
+                    env.CORE_IMAGE = "${env.NODE_IMG_HEADER}floncore/flon-node:${releaseTag}"
+                    env.HISTORY_IMAGE = "${env.NODE_IMG_HEADER}floncore/flon-node-history:${releaseTag}"
+                    currentBuild.description = "${releaseTag} -> flon-node + flon-node-history"
                 }
 
                 sh '''
                     set -eu
                     git ls-remote --exit-code --tags "${REPO}" "refs/tags/${FULLON_BRANCH}" >/dev/null
                     echo "Verified release tag: ${FULLON_BRANCH}"
-                    echo "Release image: ${OUTPUT_IMAGE}"
+                    echo "Core image: ${CORE_IMAGE}"
+                    echo "History image: ${HISTORY_IMAGE}"
                 '''
             }
         }
@@ -79,14 +79,28 @@ pipeline {
             }
         }
 
-        stage('Compile flon-core release') {
+        stage('Compile core node release') {
             steps {
                 dir('flon.chain/node-build') {
                     sh '''
                         set -eu
                         mkdir -p "${WORKSPACE}/.jenkins-home"
-                        EXPORT_DEB=true HOME="${WORKSPACE}/.jenkins-home" ./build.sh
-                        docker image inspect "${OUTPUT_IMAGE}" >/dev/null
+                        DOCKER_IMG=floncore/flon-node FLON_NODE_VARIANT=core \
+                          EXPORT_DEB=true HOME="${WORKSPACE}/.jenkins-home" ./build.sh
+                        docker image inspect "${CORE_IMAGE}" >/dev/null
+                    '''
+                }
+            }
+        }
+
+        stage('Compile history node release') {
+            steps {
+                dir('flon.chain/node-build') {
+                    sh '''
+                        set -eu
+                        DOCKER_IMG=floncore/flon-node-history FLON_NODE_VARIANT=history \
+                          EXPORT_DEB=true HOME="${WORKSPACE}/.jenkins-home" ./build.sh
+                        docker image inspect "${HISTORY_IMAGE}" >/dev/null
                     '''
                 }
             }
@@ -94,7 +108,7 @@ pipeline {
 
         stage('Archive Debian package') {
             steps {
-                archiveArtifacts artifacts: "${env.DEB_ARTIFACT}", fingerprint: true, onlyIfSuccessful: true
+                archiveArtifacts artifacts: 'flon.chain/node-build/flon-node*_amd64.deb', fingerprint: true, onlyIfSuccessful: true
             }
         }
 
@@ -112,7 +126,8 @@ pipeline {
                         set +x
                         printf '%s' "${GHCR_TOKEN}" | docker login ghcr.io --username "${GHCR_USERNAME}" --password-stdin
                         trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
-                        docker push "${OUTPUT_IMAGE}"
+                        docker push "${CORE_IMAGE}"
+                        docker push "${HISTORY_IMAGE}"
                     '''
                 }
             }
@@ -121,7 +136,7 @@ pipeline {
 
     post {
         success {
-            echo "Release completed: ${env.OUTPUT_IMAGE}"
+            echo "Release completed: ${env.CORE_IMAGE} and ${env.HISTORY_IMAGE}"
         }
         failure {
             echo 'Release failed. Check tag validation, compilation, archived package, and registry publishing logs.'
