@@ -21,6 +21,18 @@ EXPORT_DEB=${EXPORT_DEB:-"false"}
 BUILDER_BASE_IMG="fullon/base:builder"
 RUNTIME_BASE_IMG="fullon/runtime-base"
 
+SOURCE_REV="local"
+if [ "${MODE}" = "git" ]; then
+  SOURCE_REV=$(git ls-remote "${REPO}" "refs/tags/${BRANCH}^{}" | awk 'NR == 1 { print $1 }')
+  if [ -z "${SOURCE_REV}" ]; then
+    SOURCE_REV=$(git ls-remote "${REPO}" "refs/tags/${BRANCH}" "refs/heads/${BRANCH}" | awk 'NR == 1 { print $1 }')
+  fi
+  if [ -z "${SOURCE_REV}" ]; then
+    echo "Unable to resolve ${BRANCH} in ${REPO}" >&2
+    exit 1
+  fi
+fi
+
 LOCAL_PATH=$(readlink -f "${LOCAL_PATH}")
 
 echo "======================================"
@@ -30,6 +42,7 @@ echo " BRANCH           = ${BRANCH}"
 echo " MODE             = ${MODE}"
 echo " LOCAL_PATH       = ${LOCAL_PATH}"
 echo " REPO             = ${REPO}"
+echo " SOURCE_REV       = ${SOURCE_REV}"
 echo "======================================"
 
 # === Step 0-A: 构建 builder base 镜像 ===
@@ -55,7 +68,8 @@ docker build -f Dockerfile.build -t fullon/builder \
   --build-arg "REPO=${REPO}" \
   --build-arg "MODE=${MODE}" \
   --build-arg "LOCAL_PATH=${LOCAL_PATH}" \
-  --build-arg "FULLON_VERSION=${FULLON_VERSION}" .
+  --build-arg "FULLON_VERSION=${FULLON_VERSION}" \
+  --build-arg "SOURCE_REV=${SOURCE_REV}" .
 
 # === Step 2: 提取 .deb 包 ===
 echo "[2/4] Exporting .deb from builder..."

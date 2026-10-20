@@ -7,6 +7,7 @@ ARG REPO
 ARG MODE
 ARG LOCAL_PATH
 ARG FULLON_VERSION
+ARG SOURCE_REV
 ARG CMAKE_BUILD_TYPE=Release
 ARG NPROC=6
 
@@ -16,8 +17,10 @@ RUN if [ "$MODE" = "local" ]; then \
         echo "Building in local data mode"; \
         cp -r ${LOCAL_PATH}/* /fullon; \
     else \
+        echo "Building source revision ${SOURCE_REV}"; \
         echo "Building in git clone mode"; \
-        git clone --recursive "$REPO" -b "$BRANCH" .; \
+        git clone --recursive "$REPO" -b "$BRANCH" . && \
+        test "$(git rev-parse HEAD)" = "$SOURCE_REV"; \
     fi
 
 RUN cat ./CMakeLists.txt
