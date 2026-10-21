@@ -30,7 +30,7 @@ RUN git clone -b ${CDT_BRANCH} --recursive https://github.com/fullon-labs/flon.c
 
 # RUN cd build/packages && bash ./generate_package.sh "deb" \
 #     && mv "$( ls -t flon.cdt*.deb | head -1 )" /flon.cdt.deb
-RUN cd build/packages && bash ./generate_package.sh "deb" "ubuntu-22.04" "amd64" \
+RUN cd build/packages && bash ./generate_package.sh "deb" "ubuntu-22.04" "$(dpkg --print-architecture)" \
     && mv "$( ls -t flon.cdt*.deb | head -1 )" /flon.cdt.deb
 ## create flon.cdt runtime env
 FROM phusion/baseimage:jammy-1.0.4
