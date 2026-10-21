@@ -1,0 +1,103 @@
+pipeline {
+    agent { label 'a3' }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '20'))
+        disableConcurrentBuilds()
+        skipDefaultCheckout(true)
+        timestamps()
+        timeout(time: 720, unit: 'MINUTES')
+    }
+
+    parameters {
+        string(name: 'RELEASE_TAG', defaultValue: 'v0.8.7',
+               description: 'Existing flon-cdt release tag', trim: true)
+        booleanParam(name: 'PUBLISH_IMAGE', defaultValue: true,
+                     description: 'Publish the validated linux/arm64 image to GHCR')
+    }
+
+    environment {
+        REPO = 'https://github.com/fullon-labs/flon.cdt.git'
+        NODE_IMG_HEADER = 'ghcr.io/fullon-labs/'
+        CDT_IMAGE = 'floncore/floncdt'
+        FLON_LOAD_USER_ENV = 'false'
+        TARGET_PLATFORM = 'linux/arm64'
+    }
+
+    stages {
+        stage('Checkout build tools') { steps { checkout scm } }
+
+        stage('Validate release tag') {
+            steps {
+                script {
+                    def tag = params.RELEASE_TAG?.trim()
+                    if (!tag || !(tag ==~ /v?[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z][0-9A-Za-z.-]*)?/)) {
+                        error("Invalid RELEASE_TAG: ${tag}")
+                    }
+                    env.CDT_BRANCH = tag
+                    env.CDT_VERSION = "${tag}-arm64"
+                    env.OUTPUT_IMAGE = "${env.NODE_IMG_HEADER}${env.CDT_IMAGE}:${env.CDT_VERSION}"
+                    currentBuild.description = "${tag} -> ${env.OUTPUT_IMAGE}"
+                }
+                sh '''
+                    set -eu
+                    git ls-remote --exit-code --tags "${REPO}" "refs/tags/${CDT_BRANCH}" >/dev/null
+                '''
+            }
+        }
+
+        stage('Enable ARM64 builder') {
+            steps {
+                sh '''
+                    set -eu
+                    docker run --privileged --rm tonistiigi/binfmt:qemu-v8.1.5 --install arm64
+                    docker buildx inspect flon-arm64 >/dev/null 2>&1 || \
+                      docker buildx create --name flon-arm64 --driver docker-container --use
+                    docker buildx use flon-arm64
+                    docker buildx inspect --bootstrap
+                '''
+            }
+        }
+
+        stage('Build ARM64 flon-cdt') {
+            steps {
+                dir('flon.cdt') { sh './build-cdt-docker.sh' }
+            }
+        }
+
+        stage('Verify ARM64 image') {
+            steps {
+                sh '''
+                    set -eu
+                    test "$(docker image inspect "${OUTPUT_IMAGE}" --format '{{.Architecture}}')" = arm64
+                    docker run --rm --platform linux/arm64 "${OUTPUT_IMAGE}" bash -lc '
+                      test "$(uname -m)" = aarch64
+                      command -v flon-cpp
+                      flon-cpp --version
+                    '
+                '''
+            }
+        }
+
+        stage('Publish ARM64 image') {
+            when { expression { return params.PUBLISH_IMAGE } }
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'ghcr-fullon-labs',
+                    usernameVariable: 'GHCR_USERNAME', passwordVariable: 'GHCR_TOKEN')]) {
+                    sh '''
+                        set -eu
+                        set +x
+                        printf '%s' "${GHCR_TOKEN}" | docker login ghcr.io --username "${GHCR_USERNAME}" --password-stdin
+                        trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
+                        docker push "${OUTPUT_IMAGE}"
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        always { sh 'docker logout ghcr.io >/dev/null 2>&1 || true' }
+        success { echo "ARM64 flon-cdt ready: ${env.OUTPUT_IMAGE}" }
+    }
+}
