@@ -28,8 +28,8 @@ build_args=(
   --build-arg "CDT_VERSION=${CDT_VERSION}"
   --build-arg "CDT_BRANCH=${CDT_BRANCH}"
   -t "${NODE_IMG_HEADER}floncore/floncdt:${CDT_VERSION}"
-  .
   --no-cache
+  .
 )
 
 if [ -n "${TARGET_PLATFORM}" ]; then
