@@ -1,0 +1,17 @@
+agent-name = FullOn testnet BP node
+http-server-address = 0.0.0.0:8888
+p2p-listen-endpoint = 0.0.0.0:9876
+http-validate-host = false
+verbose-http-errors = true
+abi-serializer-max-time-ms = 5000
+chain-state-db-size-mb = 32768
+plugin = eosio::chain_plugin
+plugin = eosio::chain_api_plugin
+plugin = eosio::http_plugin
+plugin = eosio::net_plugin
+plugin = eosio::net_api_plugin
+plugin = eosio::producer_plugin
+plugin = eosio::producer_api_plugin
+enable-stale-production = false
+producer-name = REPLACE_TESTNET_PRODUCER_NAME
+signature-provider = REPLACE_TESTNET_PUBLIC_KEY=KEY:REPLACE_TESTNET_PRIVATE_KEY

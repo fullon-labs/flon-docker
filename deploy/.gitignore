@@ -1,6 +1,5 @@
 .env
-config/bp/config.ini
-config/*/genesis.json
+config/bp/*/config.ini
 data/
 snapshots/
 wallet/

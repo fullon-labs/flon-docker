@@ -22,6 +22,8 @@ FullOn 节点、合约编译和命令行工具的 Docker Compose 部署示例。
 
 旧的 `flon.chain/` 目录保留用于历史脚本兼容；新部署请使用 `deploy/` 下的 Compose 文件。
 
+主网与测试网使用独立环境文件、genesis、数据目录、snapshot 目录及容器名；详见部署文档的[网络隔离说明](deploy/README.md#主网与测试网隔离)。
+
 ## 镜像来源校验
 
 v0.9.0 发布时对应的镜像 digest：

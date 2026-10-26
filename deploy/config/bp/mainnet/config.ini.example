@@ -1,4 +1,4 @@
-agent-name = FullOn BP node
+agent-name = FullOn mainnet BP node
 http-server-address = 0.0.0.0:8888
 p2p-listen-endpoint = 0.0.0.0:9876
 http-validate-host = false
@@ -13,5 +13,5 @@ plugin = eosio::net_api_plugin
 plugin = eosio::producer_plugin
 plugin = eosio::producer_api_plugin
 enable-stale-production = false
-producer-name = REPLACE_PRODUCER_NAME
-signature-provider = REPLACE_PUBLIC_KEY=KEY:REPLACE_PRIVATE_KEY
+producer-name = REPLACE_MAINNET_PRODUCER_NAME
+signature-provider = REPLACE_MAINNET_PUBLIC_KEY=KEY:REPLACE_MAINNET_PRIVATE_KEY

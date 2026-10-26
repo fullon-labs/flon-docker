@@ -55,7 +55,8 @@ chain:
 
 # peers 列表（p2p-peer-address）
 peers:
-  - hk-t1.vm.nestar.vip:19806
+  # Testnet peer. Mainnet deployments must use a mainnet-only values file.
+  - hk-it.vm.nestar.vip:19606
 #  - peer1.flon.example.com:9876
 #  - peer2.flon.example.com:9876
 

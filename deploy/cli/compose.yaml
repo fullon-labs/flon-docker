@@ -1,3 +1,5 @@
+name: flon-${FLON_NETWORK:?set FLON_NETWORK to mainnet or testnet}-cli
+
 services:
   wallet:
     platform: linux/amd64
@@ -8,7 +10,7 @@ services:
     image: local/flon-cli:${FLON_VERSION:-v0.9.0}
     command: ["fuwal", "--unix-socket-path", "/wallet/fuwal.sock", "--wallet-dir", "/wallet/data"]
     restart: unless-stopped
-    volumes: ["../wallet:/wallet"]
+    volumes: ["../wallet/${FLON_NETWORK}:/wallet"]
     logging:
       driver: json-file
       options: {max-size: "30m", max-file: "1"}
@@ -17,4 +19,4 @@ services:
     image: local/flon-cli:${FLON_VERSION:-v0.9.0}
     depends_on: [wallet]
     command: ["sleep", "infinity"]
-    volumes: ["../wallet:/wallet", "../workspace:/workspace"]
+    volumes: ["../wallet/${FLON_NETWORK}:/wallet", "../workspace:/workspace"]
