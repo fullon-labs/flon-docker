@@ -1,0 +1,27 @@
+services:
+  funod:
+    platform: linux/amd64
+    image: ghcr.io/fullon-labs/floncore/flon-node:${FLON_VERSION:-v0.9.0}
+    container_name: ${NODE_NAME:-funod-common}
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 2m
+    environment:
+      P2P_PEER: ${P2P_PEER:?set P2P_PEER in .env}
+      SNAPSHOT_FILE: ${SNAPSHOT_FILE:-}
+    entrypoint: ["/opt/fullon/start-node.sh"]
+    ports: ["${RPC_PORT:-8888}:8888", "${P2P_PORT:-9876}:9876"]
+    volumes:
+      - ./bin/start-node.sh:/opt/fullon/start-node.sh:ro
+      - ./config/common:/etc/funod:ro
+      - ./data/common:/var/lib/funod
+      - ./snapshots:/snapshots:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -X POST -H 'Content-Type: application/json' -d '{}' http://127.0.0.1:8888/v1/chain/get_info >/dev/null"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 120s
+    logging:
+      driver: json-file
+      options: {max-size: "30m", max-file: "1"}

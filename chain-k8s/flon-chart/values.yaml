@@ -1,6 +1,6 @@
 image:
-  repository: ghcr.io/fullon-labs/floncore/funod
-  tag: 0.6.4
+  repository: ghcr.io/fullon-labs/floncore/flon-node
+  tag: v0.9.0
   pullPolicy: IfNotPresent
 
 replicaCount: 1  # 优化成本，单节点运行

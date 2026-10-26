@@ -1,0 +1,7 @@
+.env
+config/bp/config.ini
+config/*/genesis.json
+data/
+snapshots/
+wallet/
+workspace/

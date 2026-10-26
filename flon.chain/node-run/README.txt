@@ -1,11 +1,5 @@
-#create new node
-cp conf.env ~/
-cp testnet/conf.bp.env ~/
-modify conf.env & conf.bp.env
-./1-setup-node-env.sh
-cd ~/.XXXX
-./run.sh
+# Legacy deployment
 
-#reset node
-node=XXXX
-docker stop $node & docker rm $node
+This directory contains the original deployment scripts and is kept for
+compatibility. New v0.9.0 deployments must use the role-specific Docker
+Compose files documented in ../../deploy/README.md.

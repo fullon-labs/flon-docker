@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   node:
-    image: ${NODE_IMG_HEADER}floncore/funod:${FULLON_VERSION}
+    image: ${NODE_IMG_HEADER:-ghcr.io/fullon-labs/}floncore/flon-node:${FULLON_VERSION:-v0.9.0}
     container_name: ${node_name}
     working_dir: ${NODE_WORK_PATH}
     entrypoint: ["./bin/start.sh", "${NODE_WORK_PATH}", ""]

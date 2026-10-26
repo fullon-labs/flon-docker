@@ -1,0 +1,8 @@
+services:
+  cdt:
+    platform: linux/amd64
+    image: ghcr.io/fullon-labs/floncore/floncdt:${FLON_VERSION:-v0.9.0}
+    working_dir: /workspace
+    volumes:
+      - ${CONTRACTS_DIR:?set CONTRACTS_DIR to an absolute path}:/workspace
+    entrypoint: []
