@@ -28,6 +28,7 @@ pipeline {
                     if (tag != 'v0.9.0') {
                         error('This Dockerfile pins the v0.9.0 release package checksum; update it before building another version.')
                     }
+                    env.RELEASE_TAG = tag
                     env.IMAGE = "ghcr.io/fullon-labs/floncore/flon-tools:${tag}"
                     currentBuild.description = env.IMAGE
                 }
