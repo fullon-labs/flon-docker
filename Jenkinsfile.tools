@@ -1,0 +1,76 @@
+pipeline {
+    agent { label 'a3' }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '20'))
+        disableConcurrentBuilds()
+        skipDefaultCheckout(true)
+        timestamps()
+        timeout(time: 30, unit: 'MINUTES')
+    }
+
+    parameters {
+        string(name: 'RELEASE_TAG', defaultValue: 'v0.9.0', description: 'Existing flon-core release tag', trim: true)
+    }
+
+    stages {
+        stage('Checkout') {
+            steps { git branch: 'main', url: 'https://github.com/fullon-labs/flon-docker.git' }
+        }
+
+        stage('Validate release') {
+            steps {
+                script {
+                    def tag = params.RELEASE_TAG?.trim()
+                    if (!(tag ==~ /v[0-9]+\.[0-9]+\.[0-9]+/)) {
+                        error("Invalid RELEASE_TAG: ${tag}")
+                    }
+                    if (tag != 'v0.9.0') {
+                        error('This Dockerfile pins the v0.9.0 release package checksum; update it before building another version.')
+                    }
+                    env.IMAGE = "ghcr.io/fullon-labs/floncore/flon-tools:${tag}"
+                    currentBuild.description = env.IMAGE
+                }
+                sh '''
+                    set -eu
+                    git ls-remote --exit-code --tags https://github.com/fullon-labs/flon-core.git "refs/tags/${RELEASE_TAG}" >/dev/null
+                '''
+            }
+        }
+
+        stage('Build and verify') {
+            steps {
+                sh '''
+                    set -eu
+                    docker build --pull --platform linux/amd64 -f deploy/tools/Dockerfile -t "${IMAGE}" deploy/tools
+                    docker run --rm --platform linux/amd64 "${IMAGE}" sh -ec '
+                        command -v fucli
+                        command -v fuwal
+                        command -v flon-util
+                        command -v funod-state-inspect
+                        command -v funod-state-checkpoint
+                        fucli version client
+                    '
+                '''
+            }
+        }
+
+        stage('Publish') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'ghcr-fullon-labs', usernameVariable: 'GHCR_USERNAME', passwordVariable: 'GHCR_TOKEN')]) {
+                    sh '''
+                        set -eu
+                        set +x
+                        printf '%s' "${GHCR_TOKEN}" | docker login ghcr.io --username "${GHCR_USERNAME}" --password-stdin
+                        trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
+                        docker push "${IMAGE}"
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        cleanup { sh 'docker logout ghcr.io >/dev/null 2>&1 || true' }
+    }
+}
