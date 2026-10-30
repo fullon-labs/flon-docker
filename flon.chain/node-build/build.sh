@@ -19,6 +19,7 @@ LOCAL_PATH=${LOCAL_PATH:-"../../"}
 NODE_IMG_HEADER=${NODE_IMG_HEADER:-""}
 EXPORT_DEB=${EXPORT_DEB:-"false"}
 FLON_NODE_VARIANT=${FLON_NODE_VARIANT:-"core"}
+BUILD_JOBS=${BUILD_JOBS:-"1"}
 BUILDER_BASE_IMG="fullon/base:builder"
 RUNTIME_BASE_IMG="fullon/runtime-base"
 
@@ -59,6 +60,7 @@ echo " LOCAL_PATH       = ${LOCAL_PATH}"
 echo " REPO             = ${REPO}"
 echo " SOURCE_REV       = ${SOURCE_REV}"
 echo " NODE_VARIANT     = ${FLON_NODE_VARIANT}"
+echo " BUILD_JOBS       = ${BUILD_JOBS}"
 echo "======================================"
 
 # === Step 0-A: 构建 builder base 镜像 ===
@@ -86,6 +88,7 @@ docker build -f Dockerfile.build -t "${BUILDER_IMG}" \
   --build-arg "LOCAL_PATH=${LOCAL_PATH}" \
   --build-arg "FULLON_VERSION=${FULLON_VERSION}" \
   --build-arg "SOURCE_REV=${SOURCE_REV}" \
+  --build-arg "NPROC=${BUILD_JOBS}" \
   --build-arg "FLON_NODE_VARIANT=${FLON_NODE_VARIANT}" .
 
 # === Step 2: 提取 .deb 包 ===

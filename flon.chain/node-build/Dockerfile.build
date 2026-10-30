@@ -9,7 +9,6 @@ ARG LOCAL_PATH
 ARG FULLON_VERSION
 ARG SOURCE_REV
 ARG CMAKE_BUILD_TYPE=Release
-ARG NPROC=6
 
 WORKDIR /fullon
 
@@ -26,6 +25,7 @@ RUN if [ "$MODE" = "local" ]; then \
 RUN cat ./CMakeLists.txt
 
 ARG FLON_NODE_VARIANT=core
+ARG NPROC=1
 RUN mkdir -p build && cd build && \
     cmake -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
       -DCMAKE_PREFIX_PATH=/usr/lib/llvm-11 \
