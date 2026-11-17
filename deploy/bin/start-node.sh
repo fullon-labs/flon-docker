@@ -3,6 +3,8 @@ set -euo pipefail
 
 args=(--config-dir /etc/funod --data-dir /var/lib/funod)
 [[ -z "${P2P_PEER:-}" ]] || args+=(--p2p-peer-address "${P2P_PEER}")
+[[ -n "${P2P_PORT:-}" ]] || { echo "P2P_PORT must be set" >&2; exit 1; }
+args+=(--p2p-listen-endpoint "0.0.0.0:${P2P_PORT}")
 
 case "${FLON_NETWORK:-}" in
   mainnet) expected_genesis_sha256=d4aae059868a50401a6169c2a8261f0b9d1d12ab0638eaaf96f22d467b84bddb ;;

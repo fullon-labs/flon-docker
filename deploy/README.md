@@ -1,4 +1,4 @@
-# FullOn v0.9.0 Docker Compose 部署
+# FullOn v0.9.2 Docker Compose 部署
 
 以下示例分别用于普通节点、BP 节点和 History 节点。普通节点和 BP 使用 `flon-node`，History 使用 `flon-node-history`。
 
@@ -8,12 +8,13 @@
 
 | 项目 | 主网 | 测试网 |
 | --- | --- | --- |
-| 环境文件模板 | `.env.mainnet.example` | `.env.testnet.example` |
+| 普通节点环境模板 | `.env.mainnet.example` | `.env.testnet.example` |
+| BP 环境模板 | `.env.bp.mainnet.example` | `.env.bp.testnet.example` |
 | `FLON_NETWORK` | `mainnet` | `testnet` |
 | Chain ID | `d4019d7d…d8d12` | `18b4d583…6043f` |
 | genesis | `networks/mainnet/genesis.json` | `networks/testnet/genesis.json` |
 | 默认宿主机 RPC | 8888 | 18888 |
-| 默认宿主机 P2P | 9876 | 19876 |
+| 默认宿主机 P2P | 19876 | 29876 |
 | 数据目录 | `data/mainnet/<role>` | `data/testnet/<role>` |
 | snapshot 目录 | `snapshots/mainnet` | `snapshots/testnet` |
 | BP 私钥配置 | `config/bp/mainnet/config.ini` | `config/bp/testnet/config.ini` |
@@ -43,7 +44,7 @@ d4aae059868a50401a6169c2a8261f0b9d1d12ab0638eaaf96f22d467b84bddb
 
 ```bash
 cd deploy
-# 二选一；不要让两个网络共用同一个 .env
+# 普通节点：二选一；不要让两个网络共用同一个 .env
 cp .env.testnet.example .env
 # cp .env.mainnet.example .env
 
@@ -57,7 +58,7 @@ mkdir -p \
 
 编辑 `.env`，确认 `FLON_NETWORK`、`EXPECTED_CHAIN_ID`、端口、`P2P_PEER` 和目标网络一致。仓库已经固化两套 genesis，不要手工复制或互换。从 snapshot 启动时，把文件放入 `snapshots/$FLON_NETWORK/` 并设置 `SNAPSHOT_FILE`。不要提交 `.env`、BP 私钥、钱包、snapshot 或节点数据。
 
-测试网模板使用 `hk-it.vm.nestar.vip:19606`，主网模板使用 `hk-m1.vm.nestar.vip:9806`。这些入口可能随部署调整；上线前应确认 peer 当前可达，但不要把另一网络的 peer 填入。
+测试网模板使用 `hk-it.vm.nestar.vip:29876`，主网模板使用 `hk-m1.vm.nestar.vip:19876`。这些入口可能随部署调整；上线前应确认 peer 当前可达，但不要把另一网络的 peer 填入。
 
 ## 普通节点
 
@@ -67,17 +68,23 @@ docker compose --env-file .env -f compose.common.yaml up -d
 docker compose --env-file .env -f compose.common.yaml ps
 ```
 
-普通节点提供 chain/net API，不启用 producer 或 state-history 插件。
+普通节点仅将只读 chain API 暴露在 `${RPC_PORT}`；net API 只绑定容器 loopback，不启用 producer 或 state-history 插件。P2P 端口由 `.env` 的 `P2P_PORT` 同时决定节点监听和宿主机映射。
 
 ## BP 节点
 
 ```bash
+# BP 必须使用专用环境模板；不要使用普通节点的 .env。
+cp .env.bp.testnet.example .env
+# cp .env.bp.mainnet.example .env
+
 cp "config/bp/${FLON_NETWORK}/config.ini.example" \
   "config/bp/${FLON_NETWORK}/config.ini"
 chmod 600 "config/bp/${FLON_NETWORK}/config.ini"
 ```
 
-在当前网络的 BP `config.ini` 中填写一个 BP 的 `producer-name` 和对应 `signature-provider`。主网和测试网的私钥文件分开保存，且均被 `.gitignore` 排除。BP RPC 默认只绑定宿主机 `127.0.0.1`。
+在当前网络的 BP `config.ini` 中填写一个 BP 的 `producer-name` 和对应 `signature-provider`。主网和测试网的私钥文件分开保存，且均被 `.gitignore` 排除。
+
+BP 使用分类 HTTP API：只有 `chain_ro` 监听容器 `0.0.0.0:8888`，且 Compose 仅将它映射到宿主机 `127.0.0.1:${RPC_PORT}`；`chain_rw`、`net_rw`、`producer_rw` 均只监听容器 loopback。不要把这些重复的 `http-category-address` 写入 `.env`，它们必须保留为 `config.ini` 中的多行参数。
 
 ```bash
 docker compose --env-file .env -f compose.bp.yaml pull
@@ -130,7 +137,7 @@ CONTRACTS_DIR=/absolute/path/to/contracts docker compose run --rm cdt \
 
 ## 命令行运行环境
 
-`flon-node`/`flon-node-history` 只包含 `funod`。CLI 镜像以官方 `floncdt:v0.9.0` 为基础，并从 flon-core v0.9.0 Release 安装经过 SHA-256 校验的 `flon-core-tools`，提供 `fucli` 和 `fuwal`。
+`flon-node`/`flon-node-history` 只包含 `funod`。CLI 镜像以官方 `floncdt:v0.9.2` 为基础，并从 flon-core v0.9.2 Release 安装经过 SHA-256 校验的 `flon-core-tools`，提供 `fucli` 和 `fuwal`。
 
 ```bash
 cd deploy/cli

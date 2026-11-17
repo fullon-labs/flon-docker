@@ -1,4 +1,4 @@
-ARG FLON_VERSION=v0.9.0
+ARG FLON_VERSION=v0.9.2
 FROM ghcr.io/fullon-labs/floncore/floncdt:${FLON_VERSION}
 
 ARG TOOLS_VERSION=0.9.0

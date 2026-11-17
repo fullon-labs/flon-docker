@@ -3,7 +3,7 @@ name: flon-${FLON_NETWORK:?set FLON_NETWORK to mainnet or testnet}-common
 services:
   funod:
     platform: linux/amd64
-    image: ghcr.io/fullon-labs/floncore/flon-node:${FLON_VERSION:-v0.9.0}
+    image: ghcr.io/fullon-labs/floncore/flon-node:${FLON_VERSION:-v0.9.2}
     container_name: funod-${FLON_NETWORK}-common
     restart: unless-stopped
     init: true
@@ -14,7 +14,7 @@ services:
       P2P_PEER: ${P2P_PEER:?set P2P_PEER in .env}
       SNAPSHOT_FILE: ${SNAPSHOT_FILE:-}
     entrypoint: ["/opt/fullon/start-node.sh"]
-    ports: ["${RPC_PORT:-8888}:8888", "${P2P_PORT:-9876}:9876"]
+    ports: ["${RPC_PORT:-8888}:8888", "${P2P_PORT:?set P2P_PORT}:${P2P_PORT:?set P2P_PORT}"]
     volumes:
       - ./bin/start-node.sh:/opt/fullon/start-node.sh:ro
       - ./bin/healthcheck.sh:/opt/fullon/healthcheck.sh:ro
