@@ -46,6 +46,12 @@ pipeline {
             description: 'Existing flon-core release tag to build and publish (for example: v0.6.6)',
             trim: true
         )
+        string(
+            name: 'BUILD_JOBS',
+            defaultValue: '8',
+            description: 'Parallel Make jobs for both node packages',
+            trim: true
+        )
     }
 
     environment {
@@ -71,6 +77,12 @@ pipeline {
                         error("Invalid RELEASE_TAG: ${releaseTag}. Expected a tag such as v0.6.6 or v0.6.6-rc.1")
                     }
 
+                    def buildJobs = params.BUILD_JOBS?.trim() ?: '8'
+                    if (!(buildJobs ==~ /[1-9][0-9]*/) || !buildJobs.isInteger()) {
+                        error('BUILD_JOBS must be a positive integer')
+                    }
+
+                    env.BUILD_JOBS = buildJobs
                     env.FULLON_BRANCH = releaseTag
                     env.FULLON_VERSION = releaseTag
                     env.CORE_IMAGE = "${env.NODE_IMG_HEADER}floncore/flon-node:${releaseTag}"
