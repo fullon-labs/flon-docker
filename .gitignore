@@ -4,3 +4,5 @@
 !.env*.example
 .wallet*
 .flon.env
+
+/deploy/interop/*/config.ini

@@ -1,0 +1,2 @@
+[Service]
+ExecStart=/usr/lib/systemd/systemd-socket-proxyd /srv/flon-docker/deploy/data/mainnet/history/interop-run/interop.sock

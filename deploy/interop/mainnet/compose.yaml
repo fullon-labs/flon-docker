@@ -1,0 +1,14 @@
+# Layer after deploy/compose.history.yaml and deploy/compose.interop.yaml.
+services:
+  funod:
+    ports: !override
+      - "${INTEROP_RPC_BIND:-127.0.0.1}:${RPC_PORT:-8888}:8888"
+      - "${P2P_PORT:-19876}:${P2P_PORT:-19876}"
+      - "127.0.0.1:${HISTORY_WS_PORT:-9555}:9555"
+    volumes:
+      - type: bind
+        source: ./interop/mainnet/config.ini
+        target: /etc/funod/config.ini
+        read_only: true
+        bind:
+          create_host_path: false

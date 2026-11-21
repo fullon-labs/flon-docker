@@ -1,0 +1,27 @@
+agent-name = FullOn testnet Interop history node
+http-server-address = http-category-address
+http-category-address = chain_ro,0.0.0.0:8888
+http-category-address = chain_rw,0.0.0.0:8888
+http-category-address = chain_rw,/var/lib/funod/interop-run/interop.sock
+state-history-endpoint = 0.0.0.0:9555
+trace-history = true
+chain-state-history = true
+access-control-allow-origin = *
+http-validate-host = false
+verbose-http-errors = true
+abi-serializer-max-time-ms = 5000
+chain-state-db-size-mb = 65536
+plugin = eosio::chain_plugin
+plugin = eosio::chain_api_plugin
+plugin = eosio::http_plugin
+plugin = eosio::net_plugin
+plugin = eosio::net_api_plugin
+plugin = eosio::state_history_plugin
+
+interop-contract = interopproxy
+interop-signing-protocol = v1
+interop-relayer-permission = interopminer@relay
+interop-signature-provider = REPLACE_WITH_NETWORK_RELAY_PROVIDER
+interop-signing-threads = 2
+interop-max-in-flight = 32
+interop-submit-tcp = false

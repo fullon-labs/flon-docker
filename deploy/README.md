@@ -140,62 +140,34 @@ docker compose --env-file .env -f compose.common.yaml up -d --force-recreate
 
 ### 节点配置与 Compose
 
-将 `config/history/config.ini` 分别复制到两个独立配置目录，文件设为
-`0600`。每份配置都使用对应链上 `interopminer@relay` 的签名提供方。
-以下示例中的占位值需要替换为该网络的实际提供方，密钥仅保存在部署主机。
-请将含有签名提供方的 `deploy/interop/` 配置留在 Git 工作树之外，或加入本地 Git 排除规则。
-
-```ini
-interop-contract = interopproxy
-interop-signing-protocol = v1
-interop-relayer-permission = interopminer@relay
-interop-signature-provider = <该网络的签名提供方>
-interop-signing-threads = 2
-interop-max-in-flight = 32
-interop-submit-tcp = false
-```
-
-权限和签名提供方须成对配置。签名协议以 `config.ini` 为准，并须与链上的
-`interopproxy::global.signing_protocol` 一致。旧路由 JSON 中同名字段由 v0.9.4 忽略。
-
-将原有的 `http-server-address` 那一行替换为下列 HTTP 分类配置。
-如果原文件已有分类监听，保留原有条目，并追加缺少的 Unix socket 条目。
-通过同一 TCP 地址保留常规链 RPC 和健康检查。
-
-```ini
-http-server-address = http-category-address
-http-category-address = chain_ro,0.0.0.0:8888
-http-category-address = chain_rw,0.0.0.0:8888
-http-category-address = chain_rw,/var/lib/funod/interop-run/interop.sock
-```
-
-在 `deploy/` 创建本地覆盖文件 `compose.interop-relayer.local.yaml`，将各网络的
-配置挂载到节点。socket 使用 history 数据目录中独立的子目录，不需要额外发布端口。
-
-```yaml
-services:
-  funod:
-    volumes:
-      - type: bind
-        source: ./interop/${FLON_NETWORK}/config.ini
-        target: /etc/funod/config.ini
-        read_only: true
-        bind:
-          create_host_path: false
-```
-
-将环境示例复制为 `.env.mainnet` 和 `.env.testnet`，填好各自的 P2P peer。
-同机部署时，为两条链配置不同的 `RPC_PORT` 和 `HISTORY_WS_PORT`。
-先按容器运行用户创建并限制 socket 父目录的权限，再分别启动。
+使用 Docker Compose 2.24.4 或更新版本。在 `deploy/` 中，为要部署的网络
+复制环境和节点配置。下面的命令以主网为例，测试网将变量改为 `testnet`。
 
 ```sh
-for network in mainnet testnet; do
-  sudo install -d -m 0700 -o root -g root "./data/$network/history/interop-run"
-  FLON_VERSION=v0.9.4 docker compose --env-file ".env.$network" \
-    -f compose.history.yaml -f compose.interop.yaml \
-    -f compose.interop-relayer.local.yaml up -d
-done
+network=mainnet
+example="./interop/$network"
+cp -n "$example/.env.example" "$example/.env"
+if [ ! -e "$example/config.ini" ]; then
+  install -m 0600 "$example/config.ini.example" "$example/config.ini"
+fi
+sudo install -d -m 0700 -o root -g root "./data/$network/history/interop-run"
 ```
+
+在 `.env` 中核对 P2P peer，在 `config.ini` 中用对应网络的签名提供方替换
+`REPLACE_WITH_NETWORK_RELAY_PROVIDER`。实际配置文件已加入 Git 排除规则。
+两条链分别使用各自的 `interopminer@relay` 密钥。保留默认
+`interop-signing-protocol = v1`，并核对链上 `interopproxy::global.signing_protocol`。
+v0.9.4 会忽略旧路由 JSON 的签名协议字段。
+
+```sh
+docker compose --env-file "$example/.env" -f compose.history.yaml \
+  -f compose.interop.yaml -f "$example/compose.yaml" config -q
+docker compose --env-file "$example/.env" -f compose.history.yaml \
+  -f compose.interop.yaml -f "$example/compose.yaml" up -d
+```
+
+主网和测试网示例均使用 history 镜像 v0.9.4。RPC 和 history WebSocket 默认
+仅发布到回环地址，P2P 使用网络模板中的端口。两套示例的端口互不冲突。
 
 ### Nginx 公网入口
 
@@ -216,51 +188,24 @@ done
 `proxy_pass` 为 `http://unix:/etc/nginx/conf.d/interop-gateway/submit.sock:;`，
 hk-it 为 `http://unix:/run/fullon-interop-gateway/submit.sock:;`。两条规则都保留请求 URI。
 
-以下是新部署的通用路径示例。
-
-当节点 socket 只有运行用户可访问时，使用 `systemd-socket-proxyd` 提供一个
-Nginx 可访问的网关 socket。下面是主网示例。将 `SocketGroup` 改为
-Nginx worker 实际使用的组，`ExecStart` 中的数据目录写成主机绝对路径，
-二进制路径以发行版为准。测试网使用同样的两份单元，将名称和路径中的
-`mainnet` 换成 `testnet`。
-
-```ini
-# /etc/systemd/system/flon-interop-mainnet.socket
-[Socket]
-ListenStream=/run/flon-interop/mainnet.sock
-DirectoryMode=0755
-SocketMode=0660
-SocketGroup=nginx
-
-[Install]
-WantedBy=sockets.target
-```
-
-```ini
-# /etc/systemd/system/flon-interop-mainnet.service
-[Service]
-ExecStart=/usr/lib/systemd/systemd-socket-proxyd /srv/flon-docker/deploy/data/mainnet/history/interop-run/interop.sock
-```
+新部署使用各网络目录里的 `nginx-unix.conf` 和同名 systemd socket/service
+示例。将 systemd 文件安装到 `/etc/systemd/system/`，按宿主机实际情况调整
+`SocketGroup`、`systemd-socket-proxyd` 二进制路径，以及 `ExecStart` 最后一项
+指向的绝对数据路径。只启用已部署网络的 socket。
 
 ```sh
+sudo install -m 0644 "$example/flon-interop-$network.socket" \
+  "$example/flon-interop-$network.service" /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable --now flon-interop-mainnet.socket flon-interop-testnet.socket
+sudo systemctl enable --now "flon-interop-$network.socket"
 ```
 
-在对应域名的 HTTPS server 块中添加以下规则。主网示例 RPC 端口是 `8888`，
-测试网示例使用 `18888` 和 `/run/flon-interop/testnet.sock`。如果 Nginx
-运行在容器里，将网关 socket 的父目录挂载进容器，并为 worker 配置匹配的组 ID。
-TCP RPC upstream 应使用容器可达的节点地址。
-
-```nginx
-location = /v1/interop/submit {
-    proxy_pass http://unix:/run/flon-interop/mainnet.sock:/v1/interop/submit;
-}
-
-location /v1/interop/ {
-    proxy_pass http://127.0.0.1:8888;
-}
-```
+将 `nginx-unix.conf` 放到 Nginx 可读的目录，然后在对应域名现有的 HTTPS
+`server` 块中用 `include` 加载。主网使用 `127.0.0.1:8888` 和
+`/run/flon-interop/mainnet.sock`，测试网使用 `127.0.0.1:18888` 和
+`/run/flon-interop/testnet.sock`。若 Nginx 在容器中，挂载网关 socket 的父目录，
+给 worker 匹配的组 ID，并将 TCP upstream 改成容器可达的节点地址。
+已有相同路径的 `location` 时，用示例规则替换这些条目。
 
 用 `nginx -t` 检查后重载。公网 `get_routes` 应报告正确的 `chain_id`、
 `fullon-interop-v1`、`submission_enabled: true` 和 8 条路由。公网网关收到空请求
@@ -285,21 +230,16 @@ done
 并限制入站来源为公网 Nginx。公网 Nginx 的 upstream 填写节点侧 Nginx 的私网地址
 和监听端口，保留 `/v1/interop/submit` 请求路径。
 
-如果公网 Nginx 通过 TCP upstream 直连 `funod`，在该节点的 `config.ini` 中设置
-`interop-submit-tcp = true` 并重启。upstream 必须是配置了 `chain_rw`
-的 HTTP 监听。以下示例适用于 Nginx 和节点位于同一主机，节点的 HTTP
-端口仅发布到 `127.0.0.1`。测试网示例端口为 `18888`。
+公网 Nginx 通过私网 TCP 直连 `funod` 时，使用对应网络的
+`nginx-private-tcp.conf`。在节点 `config.ini` 中改为
+`interop-submit-tcp = true`，在 `.env` 中将 `INTEROP_RPC_BIND`
+设为节点宿主机的私网 IPv4 地址，再用上述 Compose 启动命令加上
+`--force-recreate` 重新创建容器。
+将 Nginx 示例的 upstream 地址和端口改为该节点发布的私网地址和 `RPC_PORT`。
+对私网监听配置防火墙，只允许网关的来源地址访问，访问控制和限流由网关执行。
 
-```nginx
-location /v1/interop/ {
-    proxy_pass http://127.0.0.1:8888;
-}
-```
-
-采用 TCP 方式时，将上面的规则用于整个 Interop 路径，并移除 Unix socket
-方式的 `location = /v1/interop/submit`，否则精确匹配仍会把提交转到
-Unix socket。若网关与节点分属不同主机，使用私网和防火墙限制，仅允许网关访问
-节点的 HTTP upstream。对外访问控制和限流由网关执行。
+同一 HTTPS `server` 块应只加载一种 Interop 转发示例。启用私网 TCP 后，
+从网关主机向节点 TCP 或公网 HTTPS 发送空 `submit`，两处都应返回 `400`。
 
 ### Solana 绑定端到端验证
 
