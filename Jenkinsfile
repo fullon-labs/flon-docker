@@ -1,8 +1,7 @@
 def notifyTelegram(String channel, String reference, String chatId) {
     def message = """flon-core ${channel}: ${currentBuild.currentResult}
 Ref: ${reference ?: 'unspecified'}
-Build: ${env.JOB_NAME} #${env.BUILD_NUMBER}
-${env.BUILD_URL}"""
+Build: ${env.JOB_NAME} #${env.BUILD_NUMBER}"""
 
     catchError(buildResult: 'SUCCESS', stageResult: 'SUCCESS',
                message: 'Telegram notification failed') {
@@ -13,10 +12,20 @@ ${env.BUILD_URL}"""
                     withEnv(["TELEGRAM_CHAT_ID=${chatId}", "TELEGRAM_MESSAGE=${message}"]) {
                         sh(label: 'Notify Telegram', script: '''
                             set +x
+                            telegram_text=$(python3 -c '
+from html import escape
+import os
+
+message = escape(os.environ["TELEGRAM_MESSAGE"])
+console_url = escape(os.environ["BUILD_URL"].rstrip("/") + "/console", quote=True)
+number = escape(os.environ["BUILD_NUMBER"])
+print(message + "\\n查看：<a href=\\"%s\\">构建日志#%s</a>" % (console_url, number))
+') || exit $?
                             response=$(printf 'url = "%s"\\n' "$TG_BOT" |
                                 curl --config - --silent --show-error --fail --max-time 15 \\
                                     --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" \\
-                                    --data-urlencode "text=$TELEGRAM_MESSAGE") || exit $?
+                                    --data-urlencode "parse_mode=HTML" \\
+                                    --data-urlencode "text=$telegram_text") || exit $?
                             printf '%s' "$response" | python3 -c '
 import json, os, sys
 reply = json.load(sys.stdin)
