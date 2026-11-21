@@ -8,7 +8,7 @@ pipeline {
         disableConcurrentBuilds()
         skipDefaultCheckout(true)
         timestamps()
-        timeout(time: 120, unit: 'MINUTES')
+        timeout(time: 240, unit: 'MINUTES')
     }
 
     parameters {
