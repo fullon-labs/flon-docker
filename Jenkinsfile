@@ -1,3 +1,26 @@
+def notifyTelegram(String channel, String reference, String chatId) {
+    def message = """flon-core ${channel}: ${currentBuild.currentResult}
+Ref: ${reference ?: 'unspecified'}
+Build: ${env.JOB_NAME} #${env.BUILD_NUMBER}
+${env.BUILD_URL}"""
+
+    catchError(buildResult: 'SUCCESS', stageResult: 'SUCCESS', catchInterruptions: false,
+               message: 'Telegram notification failed') {
+        withCredentials([string(credentialsId: 'tgbot', variable: 'TG_BOT')]) {
+            withEnv(["TELEGRAM_CHAT_ID=${chatId}", "TELEGRAM_MESSAGE=${message}"]) {
+                sh(label: 'Notify Telegram', script: '''
+                    set +x
+                    printf 'url = "https://api.telegram.org/bot%s/sendMessage"\\n' "$TG_BOT" |
+                        curl --config - --silent --show-error --fail --max-time 15 \\
+                            --output /dev/null \\
+                            --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" \\
+                            --data-urlencode "text=$TELEGRAM_MESSAGE"
+                ''')
+            }
+        }
+    }
+}
+
 pipeline {
     agent {
         label 'a3'
@@ -71,6 +94,11 @@ pipeline {
     }
 
     post {
+        always {
+            script {
+                notifyTelegram('development build', params.FULLON_REF, '-4127968707')
+            }
+        }
         success {
             echo "Build completed. Image remains local on a3: ${env.OUTPUT_IMAGE}"
         }
