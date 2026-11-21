@@ -13,11 +13,18 @@ ${env.BUILD_URL}"""
                     withEnv(["TELEGRAM_CHAT_ID=${chatId}", "TELEGRAM_MESSAGE=${message}"]) {
                         sh(label: 'Notify Telegram', script: '''
                             set +x
-                            printf 'url = "https://api.telegram.org/bot%s/sendMessage"\\n' "$TG_BOT" |
+                            response=$(printf 'url = "%s"\\n' "$TG_BOT" |
                                 curl --config - --silent --show-error --fail --max-time 15 \\
-                                    --output /dev/null \\
                                     --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" \\
-                                    --data-urlencode "text=$TELEGRAM_MESSAGE"
+                                    --data-urlencode "text=$TELEGRAM_MESSAGE") || exit $?
+                            printf '%s' "$response" | python3 -c '
+import json, os, sys
+reply = json.load(sys.stdin)
+message = reply.get("result", {})
+if not reply.get("ok") or str(message.get("chat", {}).get("id")) != os.environ["TELEGRAM_CHAT_ID"] or not message.get("message_id"):
+    sys.exit("Telegram did not confirm delivery to the expected chat")
+print("Telegram confirmed delivery, message ID", message["message_id"])
+'
                         ''')
                     }
                 }
