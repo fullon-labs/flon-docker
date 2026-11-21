@@ -12,6 +12,14 @@ case "${FLON_NETWORK:-}" in
   *) echo "FLON_NETWORK must be mainnet or testnet" >&2; exit 1 ;;
 esac
 
+if [[ "${FLON_ENABLE_INTEROP:-0}" == 1 ]]; then
+  [[ -f /etc/funod/interop-routes.json ]] || {
+    echo "missing ${FLON_NETWORK} interop-routes.json" >&2
+    exit 1
+  }
+  args+=(--plugin eosio::interop_relayer_api_plugin)
+fi
+
 [[ -f /etc/funod/genesis.json ]] || { echo "missing ${FLON_NETWORK} genesis.json" >&2; exit 1; }
 actual_genesis_sha256=$(sha256sum /etc/funod/genesis.json | awk '{print $1}')
 [[ "${actual_genesis_sha256}" == "${expected_genesis_sha256}" ]] || {

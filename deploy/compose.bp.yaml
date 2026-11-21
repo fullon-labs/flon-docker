@@ -12,6 +12,7 @@ services:
       FLON_NETWORK: ${FLON_NETWORK}
       EXPECTED_CHAIN_ID: ${EXPECTED_CHAIN_ID:?set the chain ID from the selected network template}
       P2P_PEER: ${P2P_PEER:?set P2P_PEER in .env}
+      P2P_PORT: ${P2P_PORT:?set P2P_PORT in .env}
       SNAPSHOT_FILE: ${SNAPSHOT_FILE:-}
     entrypoint: ["/opt/fullon/start-node.sh"]
     ports: ["127.0.0.1:${RPC_PORT:-8888}:8888", "${P2P_PORT:?set P2P_PORT}:${P2P_PORT:?set P2P_PORT}"]

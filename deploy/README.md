@@ -13,6 +13,7 @@
 | `FLON_NETWORK` | `mainnet` | `testnet` |
 | Chain ID | `d4019d7d…d8d12` | `18b4d583…6043f` |
 | genesis | `networks/mainnet/genesis.json` | `networks/testnet/genesis.json` |
+| Interop 路由 | `networks/mainnet/interop-routes.json` | `networks/testnet/interop-routes.json` |
 | 默认宿主机 RPC | 8888 | 18888 |
 | 默认宿主机 P2P | 19876 | 29876 |
 | 数据目录 | `data/mainnet/<role>` | `data/testnet/<role>` |
@@ -125,6 +126,25 @@ docker compose --env-file .env -f compose.common.yaml up -d --force-recreate
 ```
 
 按实际角色替换 Compose 文件。验证镜像版本、chain ID 和 head/LIB 后再清理旧镜像。回滚时恢复旧版本号和对应数据备份，不要让不同二进制或不同网络写同一个 data 目录。
+
+## 启用 Interop
+
+在 `deploy/` 中，选择对应网络的环境文件，并把 `compose.interop.yaml`
+叠加到节点 Compose 文件后。Interop 需要带此插件的 `v0.9.3` 或兼容镜像。
+以下以 history 节点为例，也可替换为 `compose.common.yaml` 或
+`compose.bp.yaml`（BP 使用对应的 BP 环境模板）。
+
+```sh
+FLON_VERSION=v0.9.3 docker compose --env-file .env -f compose.history.yaml -f compose.interop.yaml config
+FLON_VERSION=v0.9.3 docker compose --env-file .env -f compose.history.yaml -f compose.interop.yaml up -d
+curl -fsS "http://127.0.0.1:${RPC_PORT:-8888}/v1/interop/get_routes" |
+  jq -e '{chain_id, signing_protocol, submission_enabled, routes: (.routes | keys)}'
+```
+
+覆盖文件按 `FLON_NETWORK` 自动选择路由配置，并只读挂载到
+`/etc/funod/interop-routes.json`。核对响应中的 `chain_id` 与所选网络一致。
+默认可发现路由和准备签名。需要提交交易时，另在节点配置中设置专用中继权限、
+签名提供方和提交监听地址。中继密钥由部署环境管理。
 
 ## floncdt 编译环境
 

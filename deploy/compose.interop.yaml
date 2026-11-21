@@ -1,0 +1,11 @@
+services:
+  funod:
+    environment:
+      FLON_ENABLE_INTEROP: "1"
+    volumes:
+      - type: bind
+        source: ./networks/${FLON_NETWORK:?set FLON_NETWORK to mainnet or testnet}/interop-routes.json
+        target: /etc/funod/interop-routes.json
+        read_only: true
+        bind:
+          create_host_path: false
