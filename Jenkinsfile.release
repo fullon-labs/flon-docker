@@ -4,18 +4,23 @@ Ref: ${reference ?: 'unspecified'}
 Build: ${env.JOB_NAME} #${env.BUILD_NUMBER}
 ${env.BUILD_URL}"""
 
-    catchError(buildResult: 'SUCCESS', stageResult: 'SUCCESS', catchInterruptions: false,
+    catchError(buildResult: 'SUCCESS', stageResult: 'SUCCESS',
                message: 'Telegram notification failed') {
-        withCredentials([string(credentialsId: 'tgbot', variable: 'TG_BOT')]) {
-            withEnv(["TELEGRAM_CHAT_ID=${chatId}", "TELEGRAM_MESSAGE=${message}"]) {
-                sh(label: 'Notify Telegram', script: '''
-                    set +x
-                    printf 'url = "https://api.telegram.org/bot%s/sendMessage"\\n' "$TG_BOT" |
-                        curl --config - --silent --show-error --fail --max-time 15 \\
-                            --output /dev/null \\
-                            --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" \\
-                            --data-urlencode "text=$TELEGRAM_MESSAGE"
-                ''')
+        // Queue cancellation can reach post actions before the build agent has a workspace.
+        timeout(time: 1, unit: 'MINUTES') {
+            node('master') {
+                withCredentials([string(credentialsId: 'tgbot', variable: 'TG_BOT')]) {
+                    withEnv(["TELEGRAM_CHAT_ID=${chatId}", "TELEGRAM_MESSAGE=${message}"]) {
+                        sh(label: 'Notify Telegram', script: '''
+                            set +x
+                            printf 'url = "https://api.telegram.org/bot%s/sendMessage"\\n' "$TG_BOT" |
+                                curl --config - --silent --show-error --fail --max-time 15 \\
+                                    --output /dev/null \\
+                                    --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" \\
+                                    --data-urlencode "text=$TELEGRAM_MESSAGE"
+                        ''')
+                    }
+                }
             }
         }
     }
@@ -168,9 +173,6 @@ pipeline {
         }
         failure {
             echo 'Release failed. Check tag validation, compilation, archived package, and registry publishing logs.'
-        }
-        cleanup {
-            sh 'docker logout ghcr.io >/dev/null 2>&1 || true'
         }
     }
 }
